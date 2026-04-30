@@ -8,8 +8,7 @@ export function SiteHeader() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   const navItems = [
-    { to: "/docs", label: "Docs" },
-    { to: "/#pricing", label: "Pricing" },
+    { to: "/docs" as const, label: "Docs" },
   ];
 
   return (
