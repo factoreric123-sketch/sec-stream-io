@@ -34,6 +34,12 @@ export function SiteHeader() {
               {item.label}
             </Link>
           ))}
+          <a
+            href="/#pricing"
+            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Pricing
+          </a>
         </nav>
 
         <div className="flex items-center gap-2">
