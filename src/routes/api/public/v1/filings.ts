@@ -5,7 +5,6 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 export const Route = createFileRoute("/api/public/v1/filings")({
   server: {
     handlers: {
-      OPTIONS: async () => handlePublicApi(new Request("http://x", { method: "OPTIONS" }), "/v1/filings", async () => ({ ok: true, data: {} })),
       GET: async ({ request }) =>
         handlePublicApi(request, "/v1/filings", async ({ url }) => {
           const ticker = requireParam(url, "ticker");
