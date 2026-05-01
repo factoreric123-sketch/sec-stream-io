@@ -39,15 +39,24 @@ function DocsPage() {
               Reference
             </p>
             <nav className="mt-3 space-y-1">
-              {sections.map((s) => (
-                <a
-                  key={s.id}
-                  href={`#${s.id}`}
-                  className="block rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                >
-                  {s.label}
-                </a>
-              ))}
+              {sections.map((s, i) =>
+                "group" in s ? (
+                  <p
+                    key={`g-${i}`}
+                    className="mt-4 px-2 pb-1 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground/70"
+                  >
+                    {s.group}
+                  </p>
+                ) : (
+                  <a
+                    key={s.id}
+                    href={`#${s.id}`}
+                    className="block rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                  >
+                    {s.label}
+                  </a>
+                ),
+              )}
             </nav>
           </div>
         </aside>
@@ -59,6 +68,9 @@ function DocsPage() {
           <FilingsEndpoint />
           <CompanyEndpoint />
           <SearchEndpoint />
+          <QuoteEndpoint />
+          <BarsEndpoint />
+          <FundamentalsEndpoint />
           <Errors />
           <Limits />
         </main>
@@ -73,13 +85,14 @@ function Header() {
       <p className="font-mono text-xs uppercase tracking-[0.2em] text-primary">API Reference · v1</p>
       <h1 className="mt-2 text-4xl font-semibold tracking-tight">SECStream API</h1>
       <p className="mt-3 max-w-2xl text-muted-foreground">
-        A REST API over the SEC EDGAR system. JSON in, JSON out. One endpoint base, one auth header,
-        predictable parameters.
+        REST API for SEC filings <span className="text-foreground">and</span> market data.
+        JSON in, JSON out. One base URL, one bearer token, predictable parameters.
       </p>
       <div className="mt-6 flex flex-wrap gap-2 font-mono text-xs">
         <Pill>REST</Pill>
         <Pill>JSON</Pill>
         <Pill>Bearer auth</Pill>
+        <Pill>Filings + Market</Pill>
         <Pill>v1.0</Pill>
       </div>
     </div>
@@ -180,6 +193,7 @@ function FilingsEndpoint() {
           { name: "type", type: "string", desc: "Form type: 10-K, 10-Q, 8-K, S-1, etc." },
           { name: "from", type: "ISO date", desc: "Start of filing date range (inclusive)." },
           { name: "to", type: "ISO date", desc: "End of filing date range (inclusive)." },
+          { name: "include", type: "string", desc: "Comma-separated extras: `market` adds price reaction (price at filing, +1d, +7d). `sections` (default) returns parsed text." },
           { name: "limit", type: "integer", desc: "Max results (default 25, max 100)." },
         ]}
       />
@@ -188,8 +202,39 @@ function FilingsEndpoint() {
           filename="Request"
           code={`curl https://api.secstream.dev/v1/filings \\
   -H "Authorization: Bearer sk_live_..." \\
-  -G -d ticker=AAPL -d type=10-K -d limit=2`}
+  -G -d ticker=AAPL -d type=10-K \\
+  -d include=market -d limit=2`}
         />
+        <CodeBlock
+          filename="Response"
+          code={`{
+  "data": [
+    {
+      "company": "Apple Inc.",
+      "ticker": "AAPL",
+      "filing_type": "10-K",
+      "filing_date": "2024-11-01",
+      "url": "https://www.sec.gov/Archives/...",
+      "sections": {
+        "business": "Apple Inc. designs...",
+        "risk_factors": "The Company's...",
+        "md_and_a": "Fiscal 2024..."
+      },
+      "market": {
+        "price_at_filing": 222.91,
+        "price_t_plus_1d": 222.01,
+        "price_t_plus_7d": 229.54,
+        "reaction_7d_pct": 2.97
+      }
+    }
+  ],
+  "next_cursor": null
+}`}
+        />
+      </div>
+    </Section>
+  );
+}
         <CodeBlock
           filename="Response"
           code={`{
