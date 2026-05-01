@@ -1,7 +1,18 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { Eye, EyeOff, Copy, Check, RefreshCw, LogOut, BookOpen, AlertTriangle, Play } from "lucide-react";
-import { useAuth } from "@/lib/auth";
+import { useEffect, useMemo, useState } from "react";
+import {
+  Eye,
+  EyeOff,
+  Copy,
+  Check,
+  Trash2,
+  LogOut,
+  BookOpen,
+  Play,
+  Plus,
+  AlertCircle,
+} from "lucide-react";
+import { useAuth, type ApiKey } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { CodeBlock } from "@/components/CodeBlock";
@@ -11,7 +22,7 @@ export const Route = createFileRoute("/dashboard")({
 });
 
 function DashboardPage() {
-  const { user, profile, apiKey, loading, logout, regenerateKey } = useAuth();
+  const { user, profile, apiKey, apiKeys, loading, logout, createKey, revokeKey } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -43,11 +54,11 @@ function DashboardPage() {
 
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-6">
-            {apiKey ? (
-              <ApiKeyPanel apiKey={apiKey.keyPlaintext} onRegenerate={regenerateKey} />
-            ) : (
-              <PendingKeyPanel onCreate={regenerateKey} />
-            )}
+            <ApiKeysPanel
+              apiKeys={apiKeys}
+              onCreate={createKey}
+              onRevoke={revokeKey}
+            />
             <UsagePanel userId={user.id} />
             <QuickstartPanel apiKey={apiKey?.keyPlaintext ?? "sk_live_..."} />
           </div>
@@ -103,151 +114,449 @@ function Card({ title, description, action, children }: {
   );
 }
 
-function ApiKeyPanel({ apiKey, onRegenerate }: { apiKey: string; onRegenerate: () => Promise<void> }) {
-  const [visible, setVisible] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [confirming, setConfirming] = useState(false);
-  const [rotating, setRotating] = useState(false);
+// ============================================================================
+// API Keys
+// ============================================================================
 
-  const masked = apiKey.slice(0, 11) + "•".repeat(20) + apiKey.slice(-4);
+function ApiKeysPanel({
+  apiKeys,
+  onCreate,
+  onRevoke,
+}: {
+  apiKeys: ApiKey[];
+  onCreate: (label?: string) => Promise<ApiKey>;
+  onRevoke: (id: string) => Promise<void>;
+}) {
+  const [creating, setCreating] = useState(false);
+  const [newLabel, setNewLabel] = useState("");
+  const [revealId, setRevealId] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [confirmRevoke, setConfirmRevoke] = useState<string | null>(null);
 
-  const onCopy = async () => {
-    await navigator.clipboard.writeText(apiKey);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1400);
-  };
-
-  const handleRegenerate = async () => {
-    setRotating(true);
+  const handleCreate = async () => {
+    setCreating(true);
     try {
-      await onRegenerate();
-      setConfirming(false);
+      const k = await onCreate(newLabel);
+      setNewLabel("");
+      setRevealId(k.id);
     } finally {
-      setRotating(false);
+      setCreating(false);
     }
   };
 
+  const copy = async (id: string, value: string) => {
+    await navigator.clipboard.writeText(value);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 1400);
+  };
+
   return (
-    <Card title="API Key" description="Use this key in the Authorization header.">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div className="flex-1 truncate rounded-md border border-border bg-code-bg px-3 py-2 font-mono text-sm">
-          {visible ? apiKey : masked}
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => setVisible((v) => !v)}>
-            {visible ? <EyeOff /> : <Eye />}
-            {visible ? "Hide" : "Show"}
-          </Button>
-          <Button variant="outline" size="sm" onClick={onCopy}>
-            {copied ? <Check className="text-success" /> : <Copy />}
-            {copied ? "Copied" : "Copy"}
-          </Button>
-        </div>
+    <Card
+      title="API Keys"
+      description="Use these keys in the Authorization header. Revoke unused keys to keep them safe."
+    >
+      <div className="flex gap-2">
+        <input
+          value={newLabel}
+          onChange={(e) => setNewLabel(e.target.value)}
+          placeholder="Label (e.g. Production, Staging)"
+          maxLength={50}
+          className="flex-1 rounded-md border border-input bg-background/40 px-3 py-1.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+        />
+        <Button size="sm" onClick={handleCreate} disabled={creating}>
+          <Plus />
+          {creating ? "Creating…" : "New key"}
+        </Button>
       </div>
 
-      <div className="mt-5 flex items-start justify-between gap-4 rounded-md border border-border/60 bg-background/40 p-4">
-        <div className="flex gap-3">
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[oklch(0.78_0.15_85)]" />
-          <div>
-            <p className="text-sm font-medium">Regenerate key</p>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              Your old key will stop working immediately.
-            </p>
-          </div>
+      {apiKeys.length === 0 ? (
+        <div className="mt-6 rounded-md border border-dashed border-border bg-background/40 p-6 text-center text-sm text-muted-foreground">
+          No active keys. Create one to start calling the API.
         </div>
-        {confirming ? (
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => setConfirming(false)} disabled={rotating}>Cancel</Button>
-            <Button variant="destructive" size="sm" onClick={handleRegenerate} disabled={rotating}>
-              {rotating ? "Rotating…" : "Confirm"}
-            </Button>
-          </div>
-        ) : (
-          <Button variant="outline" size="sm" onClick={() => setConfirming(true)}>
-            <RefreshCw /> Regenerate
-          </Button>
-        )}
-      </div>
+      ) : (
+        <div className="mt-5 space-y-2">
+          {apiKeys.map((k) => {
+            const visible = revealId === k.id;
+            const display = visible
+              ? k.keyPlaintext
+              : `${k.keyPrefix}${"•".repeat(20)}${k.keyLast4}`;
+            const isConfirming = confirmRevoke === k.id;
+            return (
+              <div
+                key={k.id}
+                className="rounded-md border border-border bg-background/40 p-3"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium">{k.label}</span>
+                      <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                        {fmtKeyMeta(k)}
+                      </span>
+                    </div>
+                    <div className="mt-1.5 truncate font-mono text-xs text-foreground/80">
+                      {display}
+                    </div>
+                  </div>
+                  <div className="flex shrink-0 gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setRevealId(visible ? null : k.id)}
+                      title={visible ? "Hide" : "Reveal"}
+                    >
+                      {visible ? <EyeOff /> : <Eye />}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => copy(k.id, k.keyPlaintext)}
+                      title="Copy"
+                    >
+                      {copiedId === k.id ? (
+                        <Check className="text-success" />
+                      ) : (
+                        <Copy />
+                      )}
+                    </Button>
+                    {isConfirming ? (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setConfirmRevoke(null)}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={async () => {
+                            await onRevoke(k.id);
+                            setConfirmRevoke(null);
+                          }}
+                        >
+                          Revoke
+                        </Button>
+                      </>
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setConfirmRevoke(k.id)}
+                        title="Revoke"
+                      >
+                        <Trash2 className="text-destructive" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </Card>
   );
 }
 
-function PendingKeyPanel({ onCreate }: { onCreate: () => Promise<void> }) {
-  const [creating, setCreating] = useState(false);
-  return (
-    <Card title="API Key" description="No active key — create one to start.">
-      <Button
-        size="sm"
-        disabled={creating}
-        onClick={async () => { setCreating(true); try { await onCreate(); } finally { setCreating(false); } }}
-      >
-        {creating ? "Generating…" : "Generate API key"}
-      </Button>
-    </Card>
-  );
+function fmtKeyMeta(k: ApiKey): string {
+  const created = new Date(k.createdAt);
+  const age = Math.floor((Date.now() - created.getTime()) / 86_400_000);
+  const ageStr = age === 0 ? "today" : age === 1 ? "1d ago" : `${age}d ago`;
+  const used = k.lastUsedAt
+    ? `last used ${relTime(new Date(k.lastUsedAt))}`
+    : "never used";
+  return `created ${ageStr} · ${used}`;
 }
+
+function relTime(d: Date): string {
+  const sec = Math.floor((Date.now() - d.getTime()) / 1000);
+  if (sec < 60) return "just now";
+  if (sec < 3600) return `${Math.floor(sec / 60)}m ago`;
+  if (sec < 86400) return `${Math.floor(sec / 3600)}h ago`;
+  return `${Math.floor(sec / 86400)}d ago`;
+}
+
+// ============================================================================
+// Usage analytics
+// ============================================================================
+
+type UsageRow = {
+  endpoint: string;
+  status: number;
+  latency_ms: number;
+  created_at: string;
+};
 
 function UsagePanel({ userId }: { userId: string }) {
-  const [data, setData] = useState<number[]>(Array(30).fill(0));
+  const [rows, setRows] = useState<UsageRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let alive = true;
     (async () => {
       const since = new Date(Date.now() - 30 * 86_400_000).toISOString();
-      const { data: rows } = await supabase
+      const { data } = await supabase
         .from("usage_logs")
-        .select("created_at")
+        .select("endpoint,status,latency_ms,created_at")
         .eq("user_id", userId)
-        .gte("created_at", since);
+        .gte("created_at", since)
+        .order("created_at", { ascending: false })
+        .limit(5000);
       if (!alive) return;
-      const buckets = Array(30).fill(0);
-      const today = new Date(); today.setHours(0, 0, 0, 0);
-      (rows ?? []).forEach((r: { created_at: string }) => {
-        const d = new Date(r.created_at); d.setHours(0, 0, 0, 0);
-        const diff = Math.round((today.getTime() - d.getTime()) / 86_400_000);
-        const idx = 29 - diff;
-        if (idx >= 0 && idx < 30) buckets[idx]++;
-      });
-      setData(buckets);
+      setRows((data ?? []) as UsageRow[]);
       setLoading(false);
     })();
     return () => { alive = false; };
   }, [userId]);
 
-  const max = Math.max(...data, 1);
-  const today = data[data.length - 1];
-  const month = data.reduce((a, b) => a + b, 0);
+  const stats = useMemo(() => computeStats(rows), [rows]);
 
   return (
     <Card title="Usage" description="Last 30 days · live from your account">
-      <div className="grid grid-cols-3 gap-6 border-b border-border/60 pb-5">
-        <Stat label="Today" value={today.toLocaleString()} />
-        <Stat label="This month" value={month.toLocaleString()} />
-        <Stat label="Limit" value="100,000" subtle />
+      <div className="grid grid-cols-2 gap-4 border-b border-border/60 pb-5 sm:grid-cols-4">
+        <Stat label="Today" value={stats.today.toLocaleString()} />
+        <Stat label="7-day" value={stats.last7d.toLocaleString()} />
+        <Stat label="30-day" value={stats.last30d.toLocaleString()} />
+        <Stat
+          label="Success rate"
+          value={stats.last30d > 0 ? `${stats.successRate.toFixed(1)}%` : "—"}
+          subtle={stats.last30d === 0}
+        />
       </div>
-      <div className="mt-5 flex h-32 items-end gap-1">
-        {data.map((v, i) => (
-          <div
-            key={i}
-            className={`flex-1 rounded-t transition-all ${v > 0 ? "bg-primary/40 hover:bg-primary" : "bg-border/40"}`}
-            style={{ height: `${Math.max((v / max) * 100, 4)}%` }}
-            title={`${v.toLocaleString()} requests`}
-          />
-        ))}
+
+      {/* 30-day bar chart */}
+      <div className="mt-5">
+        <p className="mb-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+          Requests per day
+        </p>
+        <div className="flex h-24 items-end gap-1">
+          {stats.daily.map((v, i) => (
+            <div
+              key={i}
+              className={`flex-1 rounded-t transition-all ${v > 0 ? "bg-primary/40 hover:bg-primary" : "bg-border/40"}`}
+              style={{
+                height: `${Math.max((v / Math.max(...stats.daily, 1)) * 100, 4)}%`,
+              }}
+              title={`${v.toLocaleString()} requests`}
+            />
+          ))}
+        </div>
+        <div className="mt-1 flex justify-between font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+          <span>30d ago</span>
+          <span>{loading ? "…" : "today"}</span>
+        </div>
       </div>
-      <div className="mt-2 flex justify-between font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-        <span>30d ago</span>
-        <span>{loading ? "…" : "today"}</span>
-      </div>
-      {month === 0 && !loading && (
-        <p className="mt-4 text-xs text-muted-foreground">
+
+      {stats.last30d > 0 && (
+        <>
+          {/* Status + latency row */}
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            <div>
+              <p className="mb-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                Status breakdown (30d)
+              </p>
+              <div className="flex gap-1">
+                {(["2xx", "4xx", "5xx"] as const).map((band) => {
+                  const c = stats.statusBands[band];
+                  const pct = stats.last30d > 0 ? (c / stats.last30d) * 100 : 0;
+                  const color =
+                    band === "2xx"
+                      ? "bg-success/60"
+                      : band === "4xx"
+                        ? "bg-[oklch(0.78_0.15_85)]/60"
+                        : "bg-destructive/60";
+                  return (
+                    <div
+                      key={band}
+                      className={`h-6 rounded ${color} flex items-center justify-center font-mono text-[10px] text-foreground`}
+                      style={{ width: `${Math.max(pct, 6)}%` }}
+                      title={`${band}: ${c.toLocaleString()}`}
+                    >
+                      {pct >= 8 ? band : ""}
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="mt-2 flex gap-4 font-mono text-[10px] text-muted-foreground">
+                <span>2xx: {stats.statusBands["2xx"].toLocaleString()}</span>
+                <span>4xx: {stats.statusBands["4xx"].toLocaleString()}</span>
+                <span>5xx: {stats.statusBands["5xx"].toLocaleString()}</span>
+              </div>
+            </div>
+
+            <div>
+              <p className="mb-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                Latency (24h)
+              </p>
+              <div className="grid grid-cols-3 gap-2">
+                <LatencyStat label="p50" value={stats.latency.p50} />
+                <LatencyStat label="p95" value={stats.latency.p95} />
+                <LatencyStat label="p99" value={stats.latency.p99} />
+              </div>
+            </div>
+          </div>
+
+          {/* Top endpoints */}
+          {stats.topEndpoints.length > 0 && (
+            <div className="mt-6">
+              <p className="mb-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                Top endpoints (30d)
+              </p>
+              <div className="space-y-1">
+                {stats.topEndpoints.map(([ep, count]) => {
+                  const pct = (count / stats.topEndpoints[0][1]) * 100;
+                  return (
+                    <div key={ep} className="flex items-center gap-3">
+                      <code className="w-32 shrink-0 truncate font-mono text-xs">{ep}</code>
+                      <div className="flex-1">
+                        <div
+                          className="h-2 rounded-full bg-primary/40"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <span className="w-12 shrink-0 text-right font-mono text-xs text-muted-foreground">
+                        {count.toLocaleString()}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Recent errors */}
+          {stats.recentErrors.length > 0 && (
+            <div className="mt-6">
+              <p className="mb-2 flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                <AlertCircle className="h-3 w-3 text-destructive" />
+                Recent errors
+              </p>
+              <div className="overflow-hidden rounded-md border border-border/60">
+                <table className="w-full text-xs">
+                  <thead className="bg-background/40">
+                    <tr className="text-left font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                      <th className="px-3 py-2">When</th>
+                      <th className="px-3 py-2">Status</th>
+                      <th className="px-3 py-2">Endpoint</th>
+                      <th className="px-3 py-2 text-right">Latency</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {stats.recentErrors.map((r, i) => (
+                      <tr key={i} className="border-t border-border/40">
+                        <td className="px-3 py-1.5 font-mono text-muted-foreground">
+                          {relTime(new Date(r.created_at))}
+                        </td>
+                        <td className="px-3 py-1.5">
+                          <span
+                            className={`rounded px-1.5 py-0.5 font-mono text-[10px] ${r.status >= 500 ? "bg-destructive/15 text-destructive" : "bg-[oklch(0.78_0.15_85)]/15 text-[oklch(0.78_0.15_85)]"}`}
+                          >
+                            {r.status}
+                          </span>
+                        </td>
+                        <td className="px-3 py-1.5 font-mono">{r.endpoint}</td>
+                        <td className="px-3 py-1.5 text-right font-mono text-muted-foreground">
+                          {r.latency_ms}ms
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {stats.last30d === 0 && !loading && (
+        <p className="mt-6 text-xs text-muted-foreground">
           No requests yet. Try the{" "}
           <Link to="/playground" className="text-primary hover:underline">Playground</Link>{" "}
           to generate some traffic.
         </p>
       )}
     </Card>
+  );
+}
+
+function computeStats(rows: UsageRow[]) {
+  const now = Date.now();
+  const today0 = new Date(); today0.setHours(0, 0, 0, 0);
+
+  const daily = Array(30).fill(0);
+  let today = 0;
+  let last7d = 0;
+  let last30d = 0;
+  let success = 0;
+  const statusBands = { "2xx": 0, "4xx": 0, "5xx": 0 } as Record<string, number>;
+  const endpointCounts = new Map<string, number>();
+  const last24hLatencies: number[] = [];
+  const recentErrors: UsageRow[] = [];
+
+  for (const r of rows) {
+    const t = new Date(r.created_at).getTime();
+    const ageMs = now - t;
+    last30d++;
+    if (ageMs < 7 * 86_400_000) last7d++;
+
+    const d = new Date(r.created_at); d.setHours(0, 0, 0, 0);
+    if (d.getTime() === today0.getTime()) today++;
+    const dayDiff = Math.round((today0.getTime() - d.getTime()) / 86_400_000);
+    const idx = 29 - dayDiff;
+    if (idx >= 0 && idx < 30) daily[idx]++;
+
+    if (r.status >= 200 && r.status < 300) {
+      success++;
+      statusBands["2xx"]++;
+    } else if (r.status >= 400 && r.status < 500) {
+      statusBands["4xx"]++;
+    } else if (r.status >= 500) {
+      statusBands["5xx"]++;
+    }
+
+    endpointCounts.set(r.endpoint, (endpointCounts.get(r.endpoint) ?? 0) + 1);
+
+    if (ageMs < 86_400_000) last24hLatencies.push(r.latency_ms);
+    if (r.status >= 400 && recentErrors.length < 20) recentErrors.push(r);
+  }
+
+  const topEndpoints = Array.from(endpointCounts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
+
+  return {
+    daily,
+    today,
+    last7d,
+    last30d,
+    successRate: last30d > 0 ? (success / last30d) * 100 : 0,
+    statusBands,
+    topEndpoints,
+    latency: percentiles(last24hLatencies),
+    recentErrors,
+  };
+}
+
+function percentiles(arr: number[]): { p50: number; p95: number; p99: number } {
+  if (arr.length === 0) return { p50: 0, p95: 0, p99: 0 };
+  const sorted = [...arr].sort((a, b) => a - b);
+  const pick = (p: number) =>
+    sorted[Math.min(sorted.length - 1, Math.floor((p / 100) * sorted.length))];
+  return { p50: pick(50), p95: pick(95), p99: pick(99) };
+}
+
+function LatencyStat({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-md border border-border/60 bg-background/40 px-3 py-2">
+      <p className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+        {label}
+      </p>
+      <p className="mt-0.5 font-mono text-sm">
+        {value > 0 ? `${value}ms` : "—"}
+      </p>
+    </div>
   );
 }
 
@@ -262,6 +571,10 @@ function Stat({ label, value, subtle }: { label: string; value: string; subtle?:
   );
 }
 
+// ============================================================================
+// Quickstart + Account
+// ============================================================================
+
 function QuickstartPanel({ apiKey }: { apiKey: string }) {
   const [tab, setTab] = useState<"curl" | "js">("curl");
   const display = apiKey.slice(0, 14) + "...";
@@ -275,9 +588,8 @@ function QuickstartPanel({ apiKey }: { apiKey: string }) {
   "https://api.secstream.dev/v1/filings?ticker=AAPL&type=10-K&include=market",
   { headers: { Authorization: "Bearer ${display}" } }
 );
-// Returns filings with attached market reaction
-const filings = await res.json();
-console.log(filings);`;
+const { data, pagination } = await res.json();
+console.log(data.length, "filings, next cursor:", pagination.next_cursor);`;
 
   return (
     <Card
