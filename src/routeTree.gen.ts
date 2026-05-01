@@ -18,6 +18,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ChangelogRouteImport } from './routes/changelog'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DocsSdkRouteImport } from './routes/docs.sdk'
 import { Route as ApiPublicV1SearchRouteImport } from './routes/api/public/v1/search'
 import { Route as ApiPublicV1QuoteRouteImport } from './routes/api/public/v1/quote'
 import { Route as ApiPublicV1InsiderRouteImport } from './routes/api/public/v1/insider'
@@ -72,6 +73,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DocsSdkRoute = DocsSdkRouteImport.update({
+  id: '/sdk',
+  path: '/sdk',
+  getParentRoute: () => DocsRoute,
+} as any)
 const ApiPublicV1SearchRoute = ApiPublicV1SearchRouteImport.update({
   id: '/api/public/v1/search',
   path: '/api/public/v1/search',
@@ -119,11 +125,12 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/changelog': typeof ChangelogRoute
   '/dashboard': typeof DashboardRoute
-  '/docs': typeof DocsRoute
+  '/docs': typeof DocsRouteWithChildren
   '/login': typeof LoginRoute
   '/playground': typeof PlaygroundRoute
   '/signup': typeof SignupRoute
   '/status': typeof StatusRoute
+  '/docs/sdk': typeof DocsSdkRoute
   '/api/public/v1/clusters': typeof ApiPublicV1ClustersRoute
   '/api/public/v1/company': typeof ApiPublicV1CompanyRoute
   '/api/public/v1/filings': typeof ApiPublicV1FilingsRoute
@@ -138,11 +145,12 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/changelog': typeof ChangelogRoute
   '/dashboard': typeof DashboardRoute
-  '/docs': typeof DocsRoute
+  '/docs': typeof DocsRouteWithChildren
   '/login': typeof LoginRoute
   '/playground': typeof PlaygroundRoute
   '/signup': typeof SignupRoute
   '/status': typeof StatusRoute
+  '/docs/sdk': typeof DocsSdkRoute
   '/api/public/v1/clusters': typeof ApiPublicV1ClustersRoute
   '/api/public/v1/company': typeof ApiPublicV1CompanyRoute
   '/api/public/v1/filings': typeof ApiPublicV1FilingsRoute
@@ -158,11 +166,12 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/changelog': typeof ChangelogRoute
   '/dashboard': typeof DashboardRoute
-  '/docs': typeof DocsRoute
+  '/docs': typeof DocsRouteWithChildren
   '/login': typeof LoginRoute
   '/playground': typeof PlaygroundRoute
   '/signup': typeof SignupRoute
   '/status': typeof StatusRoute
+  '/docs/sdk': typeof DocsSdkRoute
   '/api/public/v1/clusters': typeof ApiPublicV1ClustersRoute
   '/api/public/v1/company': typeof ApiPublicV1CompanyRoute
   '/api/public/v1/filings': typeof ApiPublicV1FilingsRoute
@@ -184,6 +193,7 @@ export interface FileRouteTypes {
     | '/playground'
     | '/signup'
     | '/status'
+    | '/docs/sdk'
     | '/api/public/v1/clusters'
     | '/api/public/v1/company'
     | '/api/public/v1/filings'
@@ -203,6 +213,7 @@ export interface FileRouteTypes {
     | '/playground'
     | '/signup'
     | '/status'
+    | '/docs/sdk'
     | '/api/public/v1/clusters'
     | '/api/public/v1/company'
     | '/api/public/v1/filings'
@@ -222,6 +233,7 @@ export interface FileRouteTypes {
     | '/playground'
     | '/signup'
     | '/status'
+    | '/docs/sdk'
     | '/api/public/v1/clusters'
     | '/api/public/v1/company'
     | '/api/public/v1/filings'
@@ -237,7 +249,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   ChangelogRoute: typeof ChangelogRoute
   DashboardRoute: typeof DashboardRoute
-  DocsRoute: typeof DocsRoute
+  DocsRoute: typeof DocsRouteWithChildren
   LoginRoute: typeof LoginRoute
   PlaygroundRoute: typeof PlaygroundRoute
   SignupRoute: typeof SignupRoute
@@ -317,6 +329,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/docs/sdk': {
+      id: '/docs/sdk'
+      path: '/sdk'
+      fullPath: '/docs/sdk'
+      preLoaderRoute: typeof DocsSdkRouteImport
+      parentRoute: typeof DocsRoute
+    }
     '/api/public/v1/search': {
       id: '/api/public/v1/search'
       path: '/api/public/v1/search'
@@ -376,12 +395,22 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface DocsRouteChildren {
+  DocsSdkRoute: typeof DocsSdkRoute
+}
+
+const DocsRouteChildren: DocsRouteChildren = {
+  DocsSdkRoute: DocsSdkRoute,
+}
+
+const DocsRouteWithChildren = DocsRoute._addFileChildren(DocsRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   ChangelogRoute: ChangelogRoute,
   DashboardRoute: DashboardRoute,
-  DocsRoute: DocsRoute,
+  DocsRoute: DocsRouteWithChildren,
   LoginRoute: LoginRoute,
   PlaygroundRoute: PlaygroundRoute,
   SignupRoute: SignupRoute,
