@@ -13,12 +13,16 @@ import { Route as StatusRouteImport } from './routes/status'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as PlaygroundRouteImport } from './routes/playground'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as ExamplesRouteImport } from './routes/examples'
 import { Route as DocsRouteImport } from './routes/docs'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ChangelogRouteImport } from './routes/changelog'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as VsCompetitorRouteImport } from './routes/vs.$competitor'
+import { Route as ExamplesSlugRouteImport } from './routes/examples.$slug'
 import { Route as DocsSdkRouteImport } from './routes/docs.sdk'
+import { Route as CompaniesTickerRouteImport } from './routes/companies.$ticker'
 import { Route as ApiPublicV1SearchRouteImport } from './routes/api/public/v1/search'
 import { Route as ApiPublicV1QuoteRouteImport } from './routes/api/public/v1/quote'
 import { Route as ApiPublicV1InsiderRouteImport } from './routes/api/public/v1/insider'
@@ -49,6 +53,11 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ExamplesRoute = ExamplesRouteImport.update({
+  id: '/examples',
+  path: '/examples',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DocsRoute = DocsRouteImport.update({
   id: '/docs',
   path: '/docs',
@@ -74,10 +83,25 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const VsCompetitorRoute = VsCompetitorRouteImport.update({
+  id: '/vs/$competitor',
+  path: '/vs/$competitor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExamplesSlugRoute = ExamplesSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => ExamplesRoute,
+} as any)
 const DocsSdkRoute = DocsSdkRouteImport.update({
   id: '/sdk',
   path: '/sdk',
   getParentRoute: () => DocsRoute,
+} as any)
+const CompaniesTickerRoute = CompaniesTickerRouteImport.update({
+  id: '/companies/$ticker',
+  path: '/companies/$ticker',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicV1SearchRoute = ApiPublicV1SearchRouteImport.update({
   id: '/api/public/v1/search',
@@ -132,11 +156,15 @@ export interface FileRoutesByFullPath {
   '/changelog': typeof ChangelogRoute
   '/dashboard': typeof DashboardRoute
   '/docs': typeof DocsRouteWithChildren
+  '/examples': typeof ExamplesRouteWithChildren
   '/login': typeof LoginRoute
   '/playground': typeof PlaygroundRoute
   '/signup': typeof SignupRoute
   '/status': typeof StatusRoute
+  '/companies/$ticker': typeof CompaniesTickerRoute
   '/docs/sdk': typeof DocsSdkRoute
+  '/examples/$slug': typeof ExamplesSlugRoute
+  '/vs/$competitor': typeof VsCompetitorRoute
   '/api/public/v1/clusters': typeof ApiPublicV1ClustersRoute
   '/api/public/v1/company': typeof ApiPublicV1CompanyRoute
   '/api/public/v1/filings': typeof ApiPublicV1FilingsRouteWithChildren
@@ -153,11 +181,15 @@ export interface FileRoutesByTo {
   '/changelog': typeof ChangelogRoute
   '/dashboard': typeof DashboardRoute
   '/docs': typeof DocsRouteWithChildren
+  '/examples': typeof ExamplesRouteWithChildren
   '/login': typeof LoginRoute
   '/playground': typeof PlaygroundRoute
   '/signup': typeof SignupRoute
   '/status': typeof StatusRoute
+  '/companies/$ticker': typeof CompaniesTickerRoute
   '/docs/sdk': typeof DocsSdkRoute
+  '/examples/$slug': typeof ExamplesSlugRoute
+  '/vs/$competitor': typeof VsCompetitorRoute
   '/api/public/v1/clusters': typeof ApiPublicV1ClustersRoute
   '/api/public/v1/company': typeof ApiPublicV1CompanyRoute
   '/api/public/v1/filings': typeof ApiPublicV1FilingsRouteWithChildren
@@ -175,11 +207,15 @@ export interface FileRoutesById {
   '/changelog': typeof ChangelogRoute
   '/dashboard': typeof DashboardRoute
   '/docs': typeof DocsRouteWithChildren
+  '/examples': typeof ExamplesRouteWithChildren
   '/login': typeof LoginRoute
   '/playground': typeof PlaygroundRoute
   '/signup': typeof SignupRoute
   '/status': typeof StatusRoute
+  '/companies/$ticker': typeof CompaniesTickerRoute
   '/docs/sdk': typeof DocsSdkRoute
+  '/examples/$slug': typeof ExamplesSlugRoute
+  '/vs/$competitor': typeof VsCompetitorRoute
   '/api/public/v1/clusters': typeof ApiPublicV1ClustersRoute
   '/api/public/v1/company': typeof ApiPublicV1CompanyRoute
   '/api/public/v1/filings': typeof ApiPublicV1FilingsRouteWithChildren
@@ -198,11 +234,15 @@ export interface FileRouteTypes {
     | '/changelog'
     | '/dashboard'
     | '/docs'
+    | '/examples'
     | '/login'
     | '/playground'
     | '/signup'
     | '/status'
+    | '/companies/$ticker'
     | '/docs/sdk'
+    | '/examples/$slug'
+    | '/vs/$competitor'
     | '/api/public/v1/clusters'
     | '/api/public/v1/company'
     | '/api/public/v1/filings'
@@ -219,11 +259,15 @@ export interface FileRouteTypes {
     | '/changelog'
     | '/dashboard'
     | '/docs'
+    | '/examples'
     | '/login'
     | '/playground'
     | '/signup'
     | '/status'
+    | '/companies/$ticker'
     | '/docs/sdk'
+    | '/examples/$slug'
+    | '/vs/$competitor'
     | '/api/public/v1/clusters'
     | '/api/public/v1/company'
     | '/api/public/v1/filings'
@@ -240,11 +284,15 @@ export interface FileRouteTypes {
     | '/changelog'
     | '/dashboard'
     | '/docs'
+    | '/examples'
     | '/login'
     | '/playground'
     | '/signup'
     | '/status'
+    | '/companies/$ticker'
     | '/docs/sdk'
+    | '/examples/$slug'
+    | '/vs/$competitor'
     | '/api/public/v1/clusters'
     | '/api/public/v1/company'
     | '/api/public/v1/filings'
@@ -262,10 +310,13 @@ export interface RootRouteChildren {
   ChangelogRoute: typeof ChangelogRoute
   DashboardRoute: typeof DashboardRoute
   DocsRoute: typeof DocsRouteWithChildren
+  ExamplesRoute: typeof ExamplesRouteWithChildren
   LoginRoute: typeof LoginRoute
   PlaygroundRoute: typeof PlaygroundRoute
   SignupRoute: typeof SignupRoute
   StatusRoute: typeof StatusRoute
+  CompaniesTickerRoute: typeof CompaniesTickerRoute
+  VsCompetitorRoute: typeof VsCompetitorRoute
   ApiPublicV1ClustersRoute: typeof ApiPublicV1ClustersRoute
   ApiPublicV1CompanyRoute: typeof ApiPublicV1CompanyRoute
   ApiPublicV1FilingsRoute: typeof ApiPublicV1FilingsRouteWithChildren
@@ -306,6 +357,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/examples': {
+      id: '/examples'
+      path: '/examples'
+      fullPath: '/examples'
+      preLoaderRoute: typeof ExamplesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/docs': {
       id: '/docs'
       path: '/docs'
@@ -341,12 +399,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/vs/$competitor': {
+      id: '/vs/$competitor'
+      path: '/vs/$competitor'
+      fullPath: '/vs/$competitor'
+      preLoaderRoute: typeof VsCompetitorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/examples/$slug': {
+      id: '/examples/$slug'
+      path: '/$slug'
+      fullPath: '/examples/$slug'
+      preLoaderRoute: typeof ExamplesSlugRouteImport
+      parentRoute: typeof ExamplesRoute
+    }
     '/docs/sdk': {
       id: '/docs/sdk'
       path: '/sdk'
       fullPath: '/docs/sdk'
       preLoaderRoute: typeof DocsSdkRouteImport
       parentRoute: typeof DocsRoute
+    }
+    '/companies/$ticker': {
+      id: '/companies/$ticker'
+      path: '/companies/$ticker'
+      fullPath: '/companies/$ticker'
+      preLoaderRoute: typeof CompaniesTickerRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/v1/search': {
       id: '/api/public/v1/search'
@@ -424,6 +503,18 @@ const DocsRouteChildren: DocsRouteChildren = {
 
 const DocsRouteWithChildren = DocsRoute._addFileChildren(DocsRouteChildren)
 
+interface ExamplesRouteChildren {
+  ExamplesSlugRoute: typeof ExamplesSlugRoute
+}
+
+const ExamplesRouteChildren: ExamplesRouteChildren = {
+  ExamplesSlugRoute: ExamplesSlugRoute,
+}
+
+const ExamplesRouteWithChildren = ExamplesRoute._addFileChildren(
+  ExamplesRouteChildren,
+)
+
 interface ApiPublicV1FilingsRouteChildren {
   ApiPublicV1FilingsBatchRoute: typeof ApiPublicV1FilingsBatchRoute
 }
@@ -441,10 +532,13 @@ const rootRouteChildren: RootRouteChildren = {
   ChangelogRoute: ChangelogRoute,
   DashboardRoute: DashboardRoute,
   DocsRoute: DocsRouteWithChildren,
+  ExamplesRoute: ExamplesRouteWithChildren,
   LoginRoute: LoginRoute,
   PlaygroundRoute: PlaygroundRoute,
   SignupRoute: SignupRoute,
   StatusRoute: StatusRoute,
+  CompaniesTickerRoute: CompaniesTickerRoute,
+  VsCompetitorRoute: VsCompetitorRoute,
   ApiPublicV1ClustersRoute: ApiPublicV1ClustersRoute,
   ApiPublicV1CompanyRoute: ApiPublicV1CompanyRoute,
   ApiPublicV1FilingsRoute: ApiPublicV1FilingsRouteWithChildren,
