@@ -23,11 +23,16 @@ type AuthContextValue = {
   session: Session | null;
   user: SupabaseUser | null;
   profile: Profile | null;
+  apiKeys: ApiKey[];
+  /** First (most recent) key, or null. Convenience for quickstart UI. */
   apiKey: ApiKey | null;
   loading: boolean;
   signup: (email: string, password: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  createKey: (label?: string) => Promise<ApiKey>;
+  revokeKey: (id: string) => Promise<void>;
+  /** Legacy: replaces the single first key. Kept for backwards compatibility. */
   regenerateKey: () => Promise<void>;
   refresh: () => Promise<void>;
 };
