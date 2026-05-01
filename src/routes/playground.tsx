@@ -51,10 +51,11 @@ function PlaygroundPage() {
   const [params, setParams] = useState<Record<string, string>>({
     ticker: "AAPL",
     type: "10-K",
-    include: "market",
+    limit: "25",
   });
   const [response, setResponse] = useState<PlaygroundResponse | null>(null);
   const [running, setRunning] = useState(false);
+  const [useLive, setUseLive] = useState(true);
 
   const paramDefs = ENDPOINT_PARAMS[endpoint];
   const queryString = useMemo(() => {
@@ -66,17 +67,42 @@ function PlaygroundPage() {
   }, [params, paramDefs]);
 
   const keyDisplay = apiKey ? apiKey.keyPlaintext.slice(0, 14) + "..." : "sk_live_demo_...";
+  const isLive = useLive && !!apiKey && LIVE_ENDPOINTS.has(endpoint);
 
   const curl = `curl https://api.secstream.dev/v1${endpoint}${queryString} \\
   -H "Authorization: Bearer ${keyDisplay}"`;
 
-  const onRun = () => {
+  const onRun = async () => {
     setRunning(true);
+    const start = Date.now();
+
+    if (isLive && apiKey) {
+      try {
+        const res = await fetch(`/api/public/v1${endpoint.slice(1)}${queryString}`, {
+          headers: { Authorization: `Bearer ${apiKey.keyPlaintext}` },
+        });
+        const body = await res.json();
+        setResponse({
+          status: res.status,
+          latencyMs: Number(res.headers.get("X-Response-Time-Ms")) || Date.now() - start,
+          body,
+        });
+      } catch (e) {
+        setResponse({
+          status: 0,
+          latencyMs: Date.now() - start,
+          body: { error: "network_error", message: e instanceof Error ? e.message : String(e) },
+        });
+      }
+      setRunning(false);
+      return;
+    }
+
+    // Mock fallback (signed-out, or endpoints without live data yet like /bars)
     const result = mockResponse({ endpoint, params });
     window.setTimeout(async () => {
       setResponse(result);
       setRunning(false);
-      // Log to Supabase if signed in
       if (user) {
         await supabase.from("usage_logs").insert({
           user_id: user.id,
