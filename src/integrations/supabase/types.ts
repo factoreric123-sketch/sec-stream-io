@@ -218,6 +218,107 @@ export type Database = {
         }
         Relationships: []
       }
+      watched_tickers: {
+        Row: {
+          created_at: string
+          ticker: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          ticker: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          ticker?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      webhook_deliveries: {
+        Row: {
+          attempt: number
+          attempted_at: string
+          event: string
+          id: string
+          payload: Json
+          response_body: string | null
+          response_code: number | null
+          status: string
+          user_id: string
+          webhook_id: string
+        }
+        Insert: {
+          attempt?: number
+          attempted_at?: string
+          event: string
+          id?: string
+          payload: Json
+          response_body?: string | null
+          response_code?: number | null
+          status?: string
+          user_id: string
+          webhook_id: string
+        }
+        Update: {
+          attempt?: number
+          attempted_at?: string
+          event?: string
+          id?: string
+          payload?: Json
+          response_body?: string | null
+          response_code?: number | null
+          status?: string
+          user_id?: string
+          webhook_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_deliveries_webhook_id_fkey"
+            columns: ["webhook_id"]
+            isOneToOne: false
+            referencedRelation: "webhooks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      webhooks: {
+        Row: {
+          active: boolean
+          created_at: string
+          events: string[]
+          id: string
+          label: string
+          last_delivery_at: string | null
+          secret: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          events?: string[]
+          id?: string
+          label?: string
+          last_delivery_at?: string | null
+          secret: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          events?: string[]
+          id?: string
+          label?: string
+          last_delivery_at?: string | null
+          secret?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

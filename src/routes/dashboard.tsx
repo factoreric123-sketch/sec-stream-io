@@ -16,6 +16,8 @@ import { useAuth, type ApiKey } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { CodeBlock } from "@/components/CodeBlock";
+import { WebhooksPanel } from "@/components/WebhooksPanel";
+import { isAdmin } from "@/lib/admin";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardPage,
@@ -41,7 +43,7 @@ function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <DashboardHeader email={profile.email} onLogout={async () => { await logout(); navigate({ to: "/" }); }} />
+      <DashboardHeader email={profile.email} showAdmin={isAdmin(user)} onLogout={async () => { await logout(); navigate({ to: "/" }); }} />
       <main className="mx-auto max-w-6xl px-6 py-10">
         <div className="mb-8">
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
@@ -60,6 +62,7 @@ function DashboardPage() {
               onRevoke={revokeKey}
             />
             <UsagePanel userId={user.id} />
+            <WebhooksPanel userId={user.id} />
             <QuickstartPanel apiKey={apiKey?.keyPlaintext ?? "sk_live_..."} />
           </div>
           <div className="space-y-6">
@@ -72,7 +75,7 @@ function DashboardPage() {
   );
 }
 
-function DashboardHeader({ email, onLogout }: { email: string; onLogout: () => void }) {
+function DashboardHeader({ email, onLogout, showAdmin }: { email: string; onLogout: () => void; showAdmin?: boolean }) {
   return (
     <header className="border-b border-border/60 bg-background/70 backdrop-blur-xl">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-6">
@@ -82,6 +85,11 @@ function DashboardHeader({ email, onLogout }: { email: string; onLogout: () => v
         </Link>
         <div className="flex items-center gap-3">
           <span className="hidden font-mono text-xs text-muted-foreground sm:inline">{email}</span>
+          {showAdmin && (
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/admin">Admin</Link>
+            </Button>
+          )}
           <Button asChild variant="ghost" size="sm">
             <Link to="/playground"><Play /> Playground</Link>
           </Button>
