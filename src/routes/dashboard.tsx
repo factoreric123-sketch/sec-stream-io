@@ -17,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { CodeBlock } from "@/components/CodeBlock";
 import { WebhooksPanel } from "@/components/WebhooksPanel";
+import { OnboardingWizard } from "@/components/OnboardingWizard";
 import { isAdmin } from "@/lib/admin";
 
 export const Route = createFileRoute("/dashboard")({
@@ -56,6 +57,7 @@ function DashboardPage() {
 
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-6">
+            <OnboardingWizard apiKey={apiKey?.keyPlaintext ?? null} userId={user.id} />
             <ApiKeysPanel
               apiKeys={apiKeys}
               onCreate={createKey}
@@ -132,11 +134,12 @@ function ApiKeysPanel({
   onRevoke,
 }: {
   apiKeys: ApiKey[];
-  onCreate: (label?: string) => Promise<ApiKey>;
+  onCreate: (label?: string, scopes?: string[]) => Promise<ApiKey>;
   onRevoke: (id: string) => Promise<void>;
 }) {
   const [creating, setCreating] = useState(false);
   const [newLabel, setNewLabel] = useState("");
+  const [newScopes, setNewScopes] = useState<string[]>(["read", "webhooks"]);
   const [revealId, setRevealId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [confirmRevoke, setConfirmRevoke] = useState<string | null>(null);
@@ -144,13 +147,19 @@ function ApiKeysPanel({
   const handleCreate = async () => {
     setCreating(true);
     try {
-      const k = await onCreate(newLabel);
+      const k = await onCreate(newLabel, newScopes);
       setNewLabel("");
+      setNewScopes(["read", "webhooks"]);
       setRevealId(k.id);
     } finally {
       setCreating(false);
     }
   };
+
+  const toggleScope = (s: string) =>
+    setNewScopes((prev) =>
+      prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]
+    );
 
   const copy = async (id: string, value: string) => {
     await navigator.clipboard.writeText(value);
@@ -161,20 +170,38 @@ function ApiKeysPanel({
   return (
     <Card
       title="API Keys"
-      description="Use these keys in the Authorization header. Revoke unused keys to keep them safe."
+      description="Use these keys in the Authorization header. Scope keys narrowly — e.g. read-only for CI."
     >
-      <div className="flex gap-2">
-        <input
-          value={newLabel}
-          onChange={(e) => setNewLabel(e.target.value)}
-          placeholder="Label (e.g. Production, Staging)"
-          maxLength={50}
-          className="flex-1 rounded-md border border-input bg-background/40 px-3 py-1.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-        />
-        <Button size="sm" onClick={handleCreate} disabled={creating}>
-          <Plus />
-          {creating ? "Creating…" : "New key"}
-        </Button>
+      <div className="space-y-2">
+        <div className="flex gap-2">
+          <input
+            value={newLabel}
+            onChange={(e) => setNewLabel(e.target.value)}
+            placeholder="Label (e.g. Production, CI)"
+            maxLength={50}
+            className="flex-1 rounded-md border border-input bg-background/40 px-3 py-1.5 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+          />
+          <Button size="sm" onClick={handleCreate} disabled={creating || newScopes.length === 0}>
+            <Plus />
+            {creating ? "Creating…" : "New key"}
+          </Button>
+        </div>
+        <div className="flex items-center gap-3 pl-1">
+          <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+            Scopes
+          </span>
+          {(["read", "webhooks"] as const).map((s) => (
+            <label key={s} className="flex cursor-pointer items-center gap-1.5 text-xs">
+              <input
+                type="checkbox"
+                checked={newScopes.includes(s)}
+                onChange={() => toggleScope(s)}
+                className="h-3.5 w-3.5 cursor-pointer accent-primary"
+              />
+              <span className="font-mono">{s}</span>
+            </label>
+          ))}
+        </div>
       </div>
 
       {apiKeys.length === 0 ? (
@@ -196,8 +223,16 @@ function ApiKeysPanel({
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className="text-sm font-medium">{k.label}</span>
+                      {k.scopes.map((s) => (
+                        <span
+                          key={s}
+                          className="rounded border border-primary/30 bg-primary/10 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-primary"
+                        >
+                          {s}
+                        </span>
+                      ))}
                       <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
                         {fmtKeyMeta(k)}
                       </span>

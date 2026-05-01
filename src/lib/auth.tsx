@@ -15,6 +15,7 @@ export type ApiKey = {
   keyPrefix: string;
   keyLast4: string;
   label: string;
+  scopes: string[];
   lastUsedAt: string | null;
   createdAt: string;
 };
@@ -30,7 +31,7 @@ type AuthContextValue = {
   signup: (email: string, password: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  createKey: (label?: string) => Promise<ApiKey>;
+  createKey: (label?: string, scopes?: string[]) => Promise<ApiKey>;
   revokeKey: (id: string) => Promise<void>;
   /** Legacy: replaces the single first key. Kept for backwards compatibility. */
   regenerateKey: () => Promise<void>;
@@ -83,6 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         keyPrefix: k.key_prefix,
         keyLast4: k.key_last4,
         label: k.label,
+        scopes: ((k as { scopes?: string[] }).scopes) ?? ["read", "webhooks"],
         lastUsedAt: k.last_used_at,
         createdAt: k.created_at,
       }))
@@ -130,7 +132,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const createKey = useCallback(
-    async (label?: string): Promise<ApiKey> => {
+    async (label?: string, scopes?: string[]): Promise<ApiKey> => {
       if (!user) throw new Error("Not signed in");
       const newKey = generateApiKey();
       const hash = await sha256Hex(newKey);
@@ -143,6 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           key_prefix: newKey.slice(0, 11),
           key_last4: newKey.slice(-4),
           label: label?.trim() || "Default",
+          scopes: scopes && scopes.length > 0 ? scopes : ["read", "webhooks"],
         })
         .select()
         .single();
@@ -153,6 +156,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         keyPrefix: data.key_prefix,
         keyLast4: data.key_last4,
         label: data.label,
+        scopes: ((data as { scopes?: string[] }).scopes) ?? ["read", "webhooks"],
         lastUsedAt: data.last_used_at,
         createdAt: data.created_at,
       };

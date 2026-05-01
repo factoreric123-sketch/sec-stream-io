@@ -5,6 +5,7 @@ import {
   encodeCursor,
   handlePublicApi,
   parseLimit,
+  pickFields,
   requireParam,
 } from "@/server/apiAuth.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
@@ -22,6 +23,7 @@ export const Route = createFileRoute("/api/public/v1/filings")({
           const formType = url.searchParams.get("type");
           const limit = parseLimit(url, 25, 100);
           const include = url.searchParams.get("include"); // "market"
+          const fields = url.searchParams.get("fields");
           const cursor = decodeCursor(url);
 
           let q = supabaseAdmin
@@ -35,7 +37,6 @@ export const Route = createFileRoute("/api/public/v1/filings")({
             .limit(limit + 1);
           if (formType) q = q.eq("form_type", formType);
           if (cursor) {
-            // Keyset: rows older than (filed_at, accession_no)
             q = q.or(
               `filed_at.lt.${cursor.filed_at},and(filed_at.eq.${cursor.filed_at},accession_no.lt.${cursor.accession_no})`
             );
@@ -53,19 +54,19 @@ export const Route = createFileRoute("/api/public/v1/filings")({
               ? encodeCursor({ filed_at: last.filed_at, accession_no: last.accession_no })
               : null;
 
-          const filings = page.map((f) => ({
-            accession_no: f.accession_no,
-            form_type: f.form_type,
-            filed_at: f.filed_at,
-            period_of_report: f.period_of_report,
-            ticker: f.ticker,
-            company_name: f.company_name,
-            cik: f.cik,
-            sic: f.sic,
-            sic_description: f.sic_description,
-            exchange: f.exchange,
-            fiscal_year_end: f.fiscal_year_end,
-            financials: {
+          const filings = page.map((f) => {
+            const full = {
+              accession_no: f.accession_no,
+              form_type: f.form_type,
+              filed_at: f.filed_at,
+              period_of_report: f.period_of_report,
+              ticker: f.ticker,
+              company_name: f.company_name,
+              cik: f.cik,
+              sic: f.sic,
+              sic_description: f.sic_description,
+              exchange: f.exchange,
+              fiscal_year_end: f.fiscal_year_end,
               revenue: f.revenue,
               net_income: f.net_income,
               operating_cash_flow: f.operating_cash_flow,
@@ -76,13 +77,10 @@ export const Route = createFileRoute("/api/public/v1/filings")({
               cash_and_equivalents: f.cash_and_equivalents,
               current_ratio: f.current_ratio,
               debt_to_equity: f.debt_to_equity,
-            },
-            ...(include === "market" && {
-              market: {
-                note: "Market overlay coming soon — wire up your market-data source.",
-              },
-            }),
-          }));
+              ...(include === "market" && { market_note: "Market overlay coming soon." }),
+            };
+            return pickFields(full, fields);
+          });
 
           return {
             ok: true,
@@ -90,6 +88,10 @@ export const Route = createFileRoute("/api/public/v1/filings")({
               ticker: ticker.toUpperCase(),
               data: filings,
               pagination: { next_cursor: nextCursor, has_more: hasMore, limit },
+            },
+            csv: {
+              rows: filings as Array<Record<string, unknown>>,
+              filename: `filings_${ticker.toUpperCase()}.csv`,
             },
           };
         }),

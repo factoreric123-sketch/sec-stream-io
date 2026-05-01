@@ -18,13 +18,23 @@ export const Route = createFileRoute("/api/public/v1/search")({
               param: "q",
             });
           const limit = parseLimit(url, 10, 50);
+          const scope = (url.searchParams.get("scope") ?? "all").toLowerCase();
+          // scope: "all" | "ticker" | "company" | "insider"
 
-          const pattern = `%${q}%`;
+          const pattern = `%${q.replace(/[%_]/g, "\\$&")}%`;
+          const orParts: string[] = [];
+          if (scope === "all" || scope === "ticker") orParts.push(`ticker.ilike.${pattern}`);
+          if (scope === "all" || scope === "company") orParts.push(`company_name.ilike.${pattern}`);
+          if (scope === "all" || scope === "insider") orParts.push(`insider_name.ilike.${pattern}`);
+
+          if (orParts.length === 0)
+            return apiError("invalid_param", `Unknown scope: ${scope}`, 400, { param: "scope" });
+
           const { data, error } = await supabaseAdmin
             .from("sec_filings")
-            .select("ticker,company_name,cik,sic_description,exchange")
-            .or(`ticker.ilike.${pattern},company_name.ilike.${pattern}`)
-            .limit(limit * 4); // fetch extra for dedup
+            .select("ticker,company_name,cik,sic_description,exchange,insider_name")
+            .or(orParts.join(","))
+            .limit(limit * 6);
 
           if (error) return apiError("internal_error", error.message, 500);
 
@@ -35,17 +45,24 @@ export const Route = createFileRoute("/api/public/v1/search")({
             cik: string | null;
             sic_description: string | null;
             exchange: string | null;
+            insider_match: string | null;
           }> = [];
+          const lcQ = q.toLowerCase();
           for (const row of data ?? []) {
             const key = (row.ticker ?? "") + "|" + (row.cik ?? "");
             if (seen.has(key)) continue;
             seen.add(key);
+            const insiderHit =
+              row.insider_name && row.insider_name.toLowerCase().includes(lcQ)
+                ? row.insider_name
+                : null;
             results.push({
               ticker: row.ticker,
               name: row.company_name,
               cik: row.cik,
               sic_description: row.sic_description,
               exchange: row.exchange,
+              insider_match: insiderHit,
             });
             if (results.length >= limit) break;
           }
@@ -54,6 +71,7 @@ export const Route = createFileRoute("/api/public/v1/search")({
             ok: true,
             data: {
               query: q,
+              scope,
               data: results,
               pagination: { next_cursor: null, has_more: false, limit },
             },

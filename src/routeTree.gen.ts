@@ -13,12 +13,16 @@ import { Route as StatusRouteImport } from './routes/status'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as PlaygroundRouteImport } from './routes/playground'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as ExamplesRouteImport } from './routes/examples'
 import { Route as DocsRouteImport } from './routes/docs'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ChangelogRouteImport } from './routes/changelog'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as VsCompetitorRouteImport } from './routes/vs.$competitor'
+import { Route as ExamplesSlugRouteImport } from './routes/examples.$slug'
 import { Route as DocsSdkRouteImport } from './routes/docs.sdk'
+import { Route as CompaniesTickerRouteImport } from './routes/companies.$ticker'
 import { Route as ApiPublicV1SearchRouteImport } from './routes/api/public/v1/search'
 import { Route as ApiPublicV1QuoteRouteImport } from './routes/api/public/v1/quote'
 import { Route as ApiPublicV1InsiderRouteImport } from './routes/api/public/v1/insider'
@@ -26,6 +30,7 @@ import { Route as ApiPublicV1FundamentalsRouteImport } from './routes/api/public
 import { Route as ApiPublicV1FilingsRouteImport } from './routes/api/public/v1/filings'
 import { Route as ApiPublicV1CompanyRouteImport } from './routes/api/public/v1/company'
 import { Route as ApiPublicV1ClustersRouteImport } from './routes/api/public/v1/clusters'
+import { Route as ApiPublicV1FilingsBatchRouteImport } from './routes/api/public/v1/filings.batch'
 import { Route as ApiPublicV1InternalDispatchWebhooksRouteImport } from './routes/api/public/v1/_internal/dispatch-webhooks'
 
 const StatusRoute = StatusRouteImport.update({
@@ -46,6 +51,11 @@ const PlaygroundRoute = PlaygroundRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExamplesRoute = ExamplesRouteImport.update({
+  id: '/examples',
+  path: '/examples',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DocsRoute = DocsRouteImport.update({
@@ -73,10 +83,25 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const VsCompetitorRoute = VsCompetitorRouteImport.update({
+  id: '/vs/$competitor',
+  path: '/vs/$competitor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExamplesSlugRoute = ExamplesSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => ExamplesRoute,
+} as any)
 const DocsSdkRoute = DocsSdkRouteImport.update({
   id: '/sdk',
   path: '/sdk',
   getParentRoute: () => DocsRoute,
+} as any)
+const CompaniesTickerRoute = CompaniesTickerRouteImport.update({
+  id: '/companies/$ticker',
+  path: '/companies/$ticker',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicV1SearchRoute = ApiPublicV1SearchRouteImport.update({
   id: '/api/public/v1/search',
@@ -113,6 +138,11 @@ const ApiPublicV1ClustersRoute = ApiPublicV1ClustersRouteImport.update({
   path: '/api/public/v1/clusters',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicV1FilingsBatchRoute = ApiPublicV1FilingsBatchRouteImport.update({
+  id: '/batch',
+  path: '/batch',
+  getParentRoute: () => ApiPublicV1FilingsRoute,
+} as any)
 const ApiPublicV1InternalDispatchWebhooksRoute =
   ApiPublicV1InternalDispatchWebhooksRouteImport.update({
     id: '/api/public/v1/_internal/dispatch-webhooks',
@@ -126,19 +156,24 @@ export interface FileRoutesByFullPath {
   '/changelog': typeof ChangelogRoute
   '/dashboard': typeof DashboardRoute
   '/docs': typeof DocsRouteWithChildren
+  '/examples': typeof ExamplesRouteWithChildren
   '/login': typeof LoginRoute
   '/playground': typeof PlaygroundRoute
   '/signup': typeof SignupRoute
   '/status': typeof StatusRoute
+  '/companies/$ticker': typeof CompaniesTickerRoute
   '/docs/sdk': typeof DocsSdkRoute
+  '/examples/$slug': typeof ExamplesSlugRoute
+  '/vs/$competitor': typeof VsCompetitorRoute
   '/api/public/v1/clusters': typeof ApiPublicV1ClustersRoute
   '/api/public/v1/company': typeof ApiPublicV1CompanyRoute
-  '/api/public/v1/filings': typeof ApiPublicV1FilingsRoute
+  '/api/public/v1/filings': typeof ApiPublicV1FilingsRouteWithChildren
   '/api/public/v1/fundamentals': typeof ApiPublicV1FundamentalsRoute
   '/api/public/v1/insider': typeof ApiPublicV1InsiderRoute
   '/api/public/v1/quote': typeof ApiPublicV1QuoteRoute
   '/api/public/v1/search': typeof ApiPublicV1SearchRoute
   '/api/public/v1/dispatch-webhooks': typeof ApiPublicV1InternalDispatchWebhooksRoute
+  '/api/public/v1/filings/batch': typeof ApiPublicV1FilingsBatchRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -146,19 +181,24 @@ export interface FileRoutesByTo {
   '/changelog': typeof ChangelogRoute
   '/dashboard': typeof DashboardRoute
   '/docs': typeof DocsRouteWithChildren
+  '/examples': typeof ExamplesRouteWithChildren
   '/login': typeof LoginRoute
   '/playground': typeof PlaygroundRoute
   '/signup': typeof SignupRoute
   '/status': typeof StatusRoute
+  '/companies/$ticker': typeof CompaniesTickerRoute
   '/docs/sdk': typeof DocsSdkRoute
+  '/examples/$slug': typeof ExamplesSlugRoute
+  '/vs/$competitor': typeof VsCompetitorRoute
   '/api/public/v1/clusters': typeof ApiPublicV1ClustersRoute
   '/api/public/v1/company': typeof ApiPublicV1CompanyRoute
-  '/api/public/v1/filings': typeof ApiPublicV1FilingsRoute
+  '/api/public/v1/filings': typeof ApiPublicV1FilingsRouteWithChildren
   '/api/public/v1/fundamentals': typeof ApiPublicV1FundamentalsRoute
   '/api/public/v1/insider': typeof ApiPublicV1InsiderRoute
   '/api/public/v1/quote': typeof ApiPublicV1QuoteRoute
   '/api/public/v1/search': typeof ApiPublicV1SearchRoute
   '/api/public/v1/dispatch-webhooks': typeof ApiPublicV1InternalDispatchWebhooksRoute
+  '/api/public/v1/filings/batch': typeof ApiPublicV1FilingsBatchRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -167,19 +207,24 @@ export interface FileRoutesById {
   '/changelog': typeof ChangelogRoute
   '/dashboard': typeof DashboardRoute
   '/docs': typeof DocsRouteWithChildren
+  '/examples': typeof ExamplesRouteWithChildren
   '/login': typeof LoginRoute
   '/playground': typeof PlaygroundRoute
   '/signup': typeof SignupRoute
   '/status': typeof StatusRoute
+  '/companies/$ticker': typeof CompaniesTickerRoute
   '/docs/sdk': typeof DocsSdkRoute
+  '/examples/$slug': typeof ExamplesSlugRoute
+  '/vs/$competitor': typeof VsCompetitorRoute
   '/api/public/v1/clusters': typeof ApiPublicV1ClustersRoute
   '/api/public/v1/company': typeof ApiPublicV1CompanyRoute
-  '/api/public/v1/filings': typeof ApiPublicV1FilingsRoute
+  '/api/public/v1/filings': typeof ApiPublicV1FilingsRouteWithChildren
   '/api/public/v1/fundamentals': typeof ApiPublicV1FundamentalsRoute
   '/api/public/v1/insider': typeof ApiPublicV1InsiderRoute
   '/api/public/v1/quote': typeof ApiPublicV1QuoteRoute
   '/api/public/v1/search': typeof ApiPublicV1SearchRoute
   '/api/public/v1/_internal/dispatch-webhooks': typeof ApiPublicV1InternalDispatchWebhooksRoute
+  '/api/public/v1/filings/batch': typeof ApiPublicV1FilingsBatchRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -189,11 +234,15 @@ export interface FileRouteTypes {
     | '/changelog'
     | '/dashboard'
     | '/docs'
+    | '/examples'
     | '/login'
     | '/playground'
     | '/signup'
     | '/status'
+    | '/companies/$ticker'
     | '/docs/sdk'
+    | '/examples/$slug'
+    | '/vs/$competitor'
     | '/api/public/v1/clusters'
     | '/api/public/v1/company'
     | '/api/public/v1/filings'
@@ -202,6 +251,7 @@ export interface FileRouteTypes {
     | '/api/public/v1/quote'
     | '/api/public/v1/search'
     | '/api/public/v1/dispatch-webhooks'
+    | '/api/public/v1/filings/batch'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -209,11 +259,15 @@ export interface FileRouteTypes {
     | '/changelog'
     | '/dashboard'
     | '/docs'
+    | '/examples'
     | '/login'
     | '/playground'
     | '/signup'
     | '/status'
+    | '/companies/$ticker'
     | '/docs/sdk'
+    | '/examples/$slug'
+    | '/vs/$competitor'
     | '/api/public/v1/clusters'
     | '/api/public/v1/company'
     | '/api/public/v1/filings'
@@ -222,6 +276,7 @@ export interface FileRouteTypes {
     | '/api/public/v1/quote'
     | '/api/public/v1/search'
     | '/api/public/v1/dispatch-webhooks'
+    | '/api/public/v1/filings/batch'
   id:
     | '__root__'
     | '/'
@@ -229,11 +284,15 @@ export interface FileRouteTypes {
     | '/changelog'
     | '/dashboard'
     | '/docs'
+    | '/examples'
     | '/login'
     | '/playground'
     | '/signup'
     | '/status'
+    | '/companies/$ticker'
     | '/docs/sdk'
+    | '/examples/$slug'
+    | '/vs/$competitor'
     | '/api/public/v1/clusters'
     | '/api/public/v1/company'
     | '/api/public/v1/filings'
@@ -242,6 +301,7 @@ export interface FileRouteTypes {
     | '/api/public/v1/quote'
     | '/api/public/v1/search'
     | '/api/public/v1/_internal/dispatch-webhooks'
+    | '/api/public/v1/filings/batch'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -250,13 +310,16 @@ export interface RootRouteChildren {
   ChangelogRoute: typeof ChangelogRoute
   DashboardRoute: typeof DashboardRoute
   DocsRoute: typeof DocsRouteWithChildren
+  ExamplesRoute: typeof ExamplesRouteWithChildren
   LoginRoute: typeof LoginRoute
   PlaygroundRoute: typeof PlaygroundRoute
   SignupRoute: typeof SignupRoute
   StatusRoute: typeof StatusRoute
+  CompaniesTickerRoute: typeof CompaniesTickerRoute
+  VsCompetitorRoute: typeof VsCompetitorRoute
   ApiPublicV1ClustersRoute: typeof ApiPublicV1ClustersRoute
   ApiPublicV1CompanyRoute: typeof ApiPublicV1CompanyRoute
-  ApiPublicV1FilingsRoute: typeof ApiPublicV1FilingsRoute
+  ApiPublicV1FilingsRoute: typeof ApiPublicV1FilingsRouteWithChildren
   ApiPublicV1FundamentalsRoute: typeof ApiPublicV1FundamentalsRoute
   ApiPublicV1InsiderRoute: typeof ApiPublicV1InsiderRoute
   ApiPublicV1QuoteRoute: typeof ApiPublicV1QuoteRoute
@@ -294,6 +357,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/examples': {
+      id: '/examples'
+      path: '/examples'
+      fullPath: '/examples'
+      preLoaderRoute: typeof ExamplesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/docs': {
       id: '/docs'
       path: '/docs'
@@ -329,12 +399,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/vs/$competitor': {
+      id: '/vs/$competitor'
+      path: '/vs/$competitor'
+      fullPath: '/vs/$competitor'
+      preLoaderRoute: typeof VsCompetitorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/examples/$slug': {
+      id: '/examples/$slug'
+      path: '/$slug'
+      fullPath: '/examples/$slug'
+      preLoaderRoute: typeof ExamplesSlugRouteImport
+      parentRoute: typeof ExamplesRoute
+    }
     '/docs/sdk': {
       id: '/docs/sdk'
       path: '/sdk'
       fullPath: '/docs/sdk'
       preLoaderRoute: typeof DocsSdkRouteImport
       parentRoute: typeof DocsRoute
+    }
+    '/companies/$ticker': {
+      id: '/companies/$ticker'
+      path: '/companies/$ticker'
+      fullPath: '/companies/$ticker'
+      preLoaderRoute: typeof CompaniesTickerRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/v1/search': {
       id: '/api/public/v1/search'
@@ -385,6 +476,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicV1ClustersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/v1/filings/batch': {
+      id: '/api/public/v1/filings/batch'
+      path: '/batch'
+      fullPath: '/api/public/v1/filings/batch'
+      preLoaderRoute: typeof ApiPublicV1FilingsBatchRouteImport
+      parentRoute: typeof ApiPublicV1FilingsRoute
+    }
     '/api/public/v1/_internal/dispatch-webhooks': {
       id: '/api/public/v1/_internal/dispatch-webhooks'
       path: '/api/public/v1/dispatch-webhooks'
@@ -405,19 +503,45 @@ const DocsRouteChildren: DocsRouteChildren = {
 
 const DocsRouteWithChildren = DocsRoute._addFileChildren(DocsRouteChildren)
 
+interface ExamplesRouteChildren {
+  ExamplesSlugRoute: typeof ExamplesSlugRoute
+}
+
+const ExamplesRouteChildren: ExamplesRouteChildren = {
+  ExamplesSlugRoute: ExamplesSlugRoute,
+}
+
+const ExamplesRouteWithChildren = ExamplesRoute._addFileChildren(
+  ExamplesRouteChildren,
+)
+
+interface ApiPublicV1FilingsRouteChildren {
+  ApiPublicV1FilingsBatchRoute: typeof ApiPublicV1FilingsBatchRoute
+}
+
+const ApiPublicV1FilingsRouteChildren: ApiPublicV1FilingsRouteChildren = {
+  ApiPublicV1FilingsBatchRoute: ApiPublicV1FilingsBatchRoute,
+}
+
+const ApiPublicV1FilingsRouteWithChildren =
+  ApiPublicV1FilingsRoute._addFileChildren(ApiPublicV1FilingsRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   ChangelogRoute: ChangelogRoute,
   DashboardRoute: DashboardRoute,
   DocsRoute: DocsRouteWithChildren,
+  ExamplesRoute: ExamplesRouteWithChildren,
   LoginRoute: LoginRoute,
   PlaygroundRoute: PlaygroundRoute,
   SignupRoute: SignupRoute,
   StatusRoute: StatusRoute,
+  CompaniesTickerRoute: CompaniesTickerRoute,
+  VsCompetitorRoute: VsCompetitorRoute,
   ApiPublicV1ClustersRoute: ApiPublicV1ClustersRoute,
   ApiPublicV1CompanyRoute: ApiPublicV1CompanyRoute,
-  ApiPublicV1FilingsRoute: ApiPublicV1FilingsRoute,
+  ApiPublicV1FilingsRoute: ApiPublicV1FilingsRouteWithChildren,
   ApiPublicV1FundamentalsRoute: ApiPublicV1FundamentalsRoute,
   ApiPublicV1InsiderRoute: ApiPublicV1InsiderRoute,
   ApiPublicV1QuoteRoute: ApiPublicV1QuoteRoute,

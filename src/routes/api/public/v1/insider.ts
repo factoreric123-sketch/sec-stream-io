@@ -5,6 +5,7 @@ import {
   encodeCursor,
   handlePublicApi,
   parseLimit,
+  pickFields,
   requireParam,
 } from "@/server/apiAuth.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
@@ -20,6 +21,7 @@ export const Route = createFileRoute("/api/public/v1/insider")({
               param: "ticker",
             });
           const limit = parseLimit(url, 25, 100);
+          const fields = url.searchParams.get("fields");
           const cursor = decodeCursor(url);
 
           let q = supabaseAdmin
@@ -51,12 +53,18 @@ export const Route = createFileRoute("/api/public/v1/insider")({
               ? encodeCursor({ filed_at: last.filed_at, accession_no: last.accession_no })
               : null;
 
+          const projected = page.map((r) => pickFields(r as Record<string, unknown>, fields));
+
           return {
             ok: true,
             data: {
               ticker: ticker.toUpperCase(),
-              data: page,
+              data: projected,
               pagination: { next_cursor: nextCursor, has_more: hasMore, limit },
+            },
+            csv: {
+              rows: projected as Array<Record<string, unknown>>,
+              filename: `insider_${ticker.toUpperCase()}.csv`,
             },
           };
         }),

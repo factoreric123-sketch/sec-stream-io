@@ -10,6 +10,7 @@ export type AuthedKey = {
   plan: string;
   renewal_date: string | null;
   rate_limit_per_min: number;
+  scopes: string[];
 };
 
 export type ApiErrorCode =
@@ -23,7 +24,7 @@ export type ApiErrorCode =
   | "internal_error";
 
 export type ApiResult<T> =
-  | { ok: true; data: T; status?: number }
+  | { ok: true; data: T; status?: number; csv?: { rows: Array<Record<string, unknown>>; filename: string } }
   | {
       ok: false;
       status: number;
@@ -34,8 +35,8 @@ export type ApiResult<T> =
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, Accept",
   "Access-Control-Expose-Headers":
     "X-Request-Id, X-Response-Time-Ms, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, Retry-After",
 } as const;
@@ -86,7 +87,7 @@ async function authenticate(request: Request): Promise<AuthedKey | null> {
 
   const { data: keyRow, error: keyErr } = await supabaseAdmin
     .from("api_keys")
-    .select("id,user_id")
+    .select("id,user_id,scopes")
     .eq("key_hash", hash)
     .maybeSingle();
   if (keyErr || !keyRow) return null;
@@ -103,7 +104,80 @@ async function authenticate(request: Request): Promise<AuthedKey | null> {
     plan: profile?.plan ?? "active",
     renewal_date: profile?.renewal_date ?? null,
     rate_limit_per_min: profile?.rate_limit_per_min ?? 60,
+    scopes: (keyRow as { scopes?: string[] }).scopes ?? ["read", "webhooks"],
   };
+}
+
+export function requireScope(auth: AuthedKey, scope: string): ApiResult<never> | null {
+  if (!auth.scopes.includes(scope)) {
+    return apiError(
+      "forbidden",
+      `This API key is missing the required scope: ${scope}`,
+      403,
+      { required_scope: scope, key_scopes: auth.scopes }
+    );
+  }
+  return null;
+}
+
+/** Pick a subset of fields from an object based on ?fields= csv. Pass-through if null/empty. */
+export function pickFields<T extends Record<string, unknown>>(
+  obj: T,
+  fieldsParam: string | null
+): Partial<T> | T {
+  if (!fieldsParam) return obj;
+  const wanted = fieldsParam
+    .split(",")
+    .map((f) => f.trim())
+    .filter(Boolean);
+  if (wanted.length === 0) return obj;
+  const out: Partial<T> = {};
+  for (const k of wanted) {
+    if (k in obj) (out as Record<string, unknown>)[k] = obj[k];
+  }
+  return out;
+}
+
+/** Convert array of flat objects to a CSV string. */
+export function toCsv(rows: Array<Record<string, unknown>>): string {
+  if (rows.length === 0) return "";
+  const headers = Array.from(
+    rows.reduce((set, r) => {
+      Object.keys(r).forEach((k) => set.add(k));
+      return set;
+    }, new Set<string>())
+  );
+  const escape = (v: unknown): string => {
+    if (v === null || v === undefined) return "";
+    const s = typeof v === "object" ? JSON.stringify(v) : String(v);
+    if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+    return s;
+  };
+  const lines = [headers.join(",")];
+  for (const r of rows) {
+    lines.push(headers.map((h) => escape(r[h])).join(","));
+  }
+  return lines.join("\n");
+}
+
+/** True if the request prefers CSV (?format=csv or Accept: text/csv). */
+export function wantsCsv(request: Request, url: URL): boolean {
+  const fmt = url.searchParams.get("format");
+  if (fmt && fmt.toLowerCase() === "csv") return true;
+  const accept = request.headers.get("accept") ?? "";
+  return accept.toLowerCase().includes("text/csv");
+}
+
+export function csvResponse(csv: string, filename: string, headers: Record<string, string>) {
+  return new Response(csv, {
+    status: 200,
+    headers: {
+      "Content-Type": "text/csv; charset=utf-8",
+      "Content-Disposition": `attachment; filename="${filename}"`,
+      ...CORS_HEADERS,
+      ...headers,
+    },
+  });
 }
 
 /** Returns count of requests in the last 60 seconds for this user. */
@@ -160,7 +234,8 @@ function buildErrorBody(
 export async function handlePublicApi<T>(
   request: Request,
   endpoint: string,
-  fn: (ctx: { auth: AuthedKey; url: URL }) => Promise<ApiResult<T>>
+  fn: (ctx: { auth: AuthedKey; url: URL }) => Promise<ApiResult<T>>,
+  options: { requiredScope?: string } = { requiredScope: "read" }
 ): Promise<Response> {
   const start = Date.now();
   const requestId = randomUUID();
@@ -197,6 +272,22 @@ export async function handlePublicApi<T>(
       ...baseHeaders,
       "X-Response-Time-Ms": String(latency),
     });
+  }
+
+  // 2b. Scope enforcement
+  const requiredScope = options.requiredScope ?? "read";
+  if (requiredScope && !auth.scopes.includes(requiredScope)) {
+    const latency = Date.now() - start;
+    await logUsage(auth, endpoint, 403, latency);
+    return jsonResponse(
+      buildErrorBody(
+        "forbidden",
+        `This API key is missing the required scope: ${requiredScope}`,
+        { required_scope: requiredScope, key_scopes: auth.scopes }
+      ),
+      403,
+      { ...baseHeaders, "X-Response-Time-Ms": String(latency) }
+    );
   }
 
   // 3. Rate limit (best-effort: counts usage_logs in the last 60s).
@@ -248,7 +339,12 @@ export async function handlePublicApi<T>(
     "X-Response-Time-Ms": String(latency),
   };
 
-  if (result.ok) return jsonResponse(result.data, status, responseHeaders);
+  if (result.ok) {
+    if (result.csv && wantsCsv(request, new URL(request.url))) {
+      return csvResponse(toCsv(result.csv.rows), result.csv.filename, responseHeaders);
+    }
+    return jsonResponse(result.data, status, responseHeaders);
+  }
   return jsonResponse(
     buildErrorBody(result.code, result.message, result.details),
     status,
