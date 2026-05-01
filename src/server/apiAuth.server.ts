@@ -24,7 +24,7 @@ export type ApiErrorCode =
   | "internal_error";
 
 export type ApiResult<T> =
-  | { ok: true; data: T; status?: number }
+  | { ok: true; data: T; status?: number; csv?: { rows: Array<Record<string, unknown>>; filename: string } }
   | {
       ok: false;
       status: number;
