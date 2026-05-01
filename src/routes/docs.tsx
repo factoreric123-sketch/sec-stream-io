@@ -15,12 +15,18 @@ export const Route = createFileRoute("/docs")({
 const sections = [
   { id: "intro", label: "Introduction" },
   { id: "auth", label: "Authentication" },
+  { group: "Filings" },
   { id: "filings", label: "GET /filings" },
   { id: "company", label: "GET /company" },
   { id: "search", label: "GET /search" },
+  { group: "Market data" },
+  { id: "quote", label: "GET /quote" },
+  { id: "bars", label: "GET /bars" },
+  { id: "fundamentals", label: "GET /fundamentals" },
+  { group: "System" },
   { id: "errors", label: "Errors" },
   { id: "limits", label: "Rate limits" },
-];
+] as Array<{ id: string; label: string } | { group: string }>;
 
 function DocsPage() {
   return (
@@ -33,15 +39,24 @@ function DocsPage() {
               Reference
             </p>
             <nav className="mt-3 space-y-1">
-              {sections.map((s) => (
-                <a
-                  key={s.id}
-                  href={`#${s.id}`}
-                  className="block rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                >
-                  {s.label}
-                </a>
-              ))}
+              {sections.map((s, i) =>
+                "group" in s ? (
+                  <p
+                    key={`g-${i}`}
+                    className="mt-4 px-2 pb-1 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground/70"
+                  >
+                    {s.group}
+                  </p>
+                ) : (
+                  <a
+                    key={s.id}
+                    href={`#${s.id}`}
+                    className="block rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                  >
+                    {s.label}
+                  </a>
+                ),
+              )}
             </nav>
           </div>
         </aside>
@@ -53,6 +68,9 @@ function DocsPage() {
           <FilingsEndpoint />
           <CompanyEndpoint />
           <SearchEndpoint />
+          <QuoteEndpoint />
+          <BarsEndpoint />
+          <FundamentalsEndpoint />
           <Errors />
           <Limits />
         </main>
@@ -67,13 +85,14 @@ function Header() {
       <p className="font-mono text-xs uppercase tracking-[0.2em] text-primary">API Reference · v1</p>
       <h1 className="mt-2 text-4xl font-semibold tracking-tight">SECStream API</h1>
       <p className="mt-3 max-w-2xl text-muted-foreground">
-        A REST API over the SEC EDGAR system. JSON in, JSON out. One endpoint base, one auth header,
-        predictable parameters.
+        REST API for SEC filings <span className="text-foreground">and</span> market data.
+        JSON in, JSON out. One base URL, one bearer token, predictable parameters.
       </p>
       <div className="mt-6 flex flex-wrap gap-2 font-mono text-xs">
         <Pill>REST</Pill>
         <Pill>JSON</Pill>
         <Pill>Bearer auth</Pill>
+        <Pill>Filings + Market</Pill>
         <Pill>v1.0</Pill>
       </div>
     </div>
@@ -174,6 +193,7 @@ function FilingsEndpoint() {
           { name: "type", type: "string", desc: "Form type: 10-K, 10-Q, 8-K, S-1, etc." },
           { name: "from", type: "ISO date", desc: "Start of filing date range (inclusive)." },
           { name: "to", type: "ISO date", desc: "End of filing date range (inclusive)." },
+          { name: "include", type: "string", desc: "Comma-separated extras: `market` adds price reaction (price at filing, +1d, +7d). `sections` (default) returns parsed text." },
           { name: "limit", type: "integer", desc: "Max results (default 25, max 100)." },
         ]}
       />
@@ -182,7 +202,8 @@ function FilingsEndpoint() {
           filename="Request"
           code={`curl https://api.secstream.dev/v1/filings \\
   -H "Authorization: Bearer sk_live_..." \\
-  -G -d ticker=AAPL -d type=10-K -d limit=2`}
+  -G -d ticker=AAPL -d type=10-K \\
+  -d include=market -d limit=2`}
         />
         <CodeBlock
           filename="Response"
@@ -198,6 +219,12 @@ function FilingsEndpoint() {
         "business": "Apple Inc. designs...",
         "risk_factors": "The Company's...",
         "md_and_a": "Fiscal 2024..."
+      },
+      "market": {
+        "price_at_filing": 222.91,
+        "price_t_plus_1d": 222.01,
+        "price_t_plus_7d": 229.54,
+        "reaction_7d_pct": 2.97
       }
     }
   ],
@@ -208,7 +235,6 @@ function FilingsEndpoint() {
     </Section>
   );
 }
-
 function CompanyEndpoint() {
   return (
     <Section id="company" title="GET /company">
@@ -312,6 +338,96 @@ function Limits() {
         code={`X-RateLimit-Limit: 100000
 X-RateLimit-Remaining: 99847
 X-RateLimit-Reset: 2025-12-01T00:00:00Z`}
+      />
+    </Section>
+  );
+}
+
+function QuoteEndpoint() {
+  return (
+    <Section id="quote" title="GET /quote">
+      <p className="text-sm text-muted-foreground">
+        Live quote for a ticker. Last price, bid/ask, day change, and volume.
+      </p>
+      <Endpoint method="GET" path="/v1/quote" />
+      <ParamTable
+        rows={[
+          { name: "ticker", type: "string", required: true, desc: "Stock ticker symbol." },
+        ]}
+      />
+      <CodeBlock
+        filename="Response"
+        code={`{
+  "ticker": "AAPL",
+  "price": 229.87,
+  "bid": 229.85,
+  "ask": 229.88,
+  "day_change": 1.42,
+  "day_change_pct": 0.62,
+  "volume": 48211900,
+  "as_of": "2025-05-01T19:59:58Z"
+}`}
+      />
+    </Section>
+  );
+}
+
+function BarsEndpoint() {
+  return (
+    <Section id="bars" title="GET /bars">
+      <p className="text-sm text-muted-foreground">
+        Historical OHLCV bars. Use for charts, backtests, or correlating filings to price action.
+      </p>
+      <Endpoint method="GET" path="/v1/bars" />
+      <ParamTable
+        rows={[
+          { name: "ticker", type: "string", required: true, desc: "Stock ticker symbol." },
+          { name: "timeframe", type: "string", required: true, desc: "1m, 5m, 1h, 1d, 1w, 1mo." },
+          { name: "from", type: "ISO date", desc: "Start of range (inclusive)." },
+          { name: "to", type: "ISO date", desc: "End of range (inclusive)." },
+          { name: "limit", type: "integer", desc: "Max bars (default 500, max 5000)." },
+        ]}
+      />
+      <CodeBlock
+        filename="Response"
+        code={`{
+  "ticker": "AAPL",
+  "timeframe": "1d",
+  "data": [
+    { "t": "2025-04-28", "o": 224.10, "h": 227.03, "l": 223.81, "c": 226.40, "v": 41880200 },
+    { "t": "2025-04-29", "o": 226.55, "h": 229.99, "l": 225.92, "c": 229.87, "v": 48211900 }
+  ]
+}`}
+      />
+    </Section>
+  );
+}
+
+function FundamentalsEndpoint() {
+  return (
+    <Section id="fundamentals" title="GET /fundamentals">
+      <p className="text-sm text-muted-foreground">
+        Live fundamentals derived from latest filings + current price: market cap, P/E, EPS, sector.
+      </p>
+      <Endpoint method="GET" path="/v1/fundamentals" />
+      <ParamTable
+        rows={[
+          { name: "ticker", type: "string", required: true, desc: "Stock ticker symbol." },
+        ]}
+      />
+      <CodeBlock
+        filename="Response"
+        code={`{
+  "ticker": "AAPL",
+  "market_cap": 3480000000000,
+  "pe_ratio": 35.4,
+  "eps_ttm": 6.49,
+  "dividend_yield": 0.0044,
+  "shares_outstanding": 15140000000,
+  "sector": "Technology",
+  "industry": "Consumer Electronics",
+  "latest_filing": { "type": "10-K", "date": "2024-11-01" }
+}`}
       />
     </Section>
   );
