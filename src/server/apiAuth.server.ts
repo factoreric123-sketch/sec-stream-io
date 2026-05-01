@@ -45,12 +45,12 @@ export function corsPreflight() {
 }
 
 /** Build a structured error result. Use inside handlers. */
-export function apiError(
+export function apiError<T = unknown>(
   code: ApiErrorCode,
   message: string,
   status: number,
   details?: Record<string, unknown>
-): ApiResult<never> {
+): ApiResult<T> {
   return { ok: false, status, code, message, details };
 }
 
