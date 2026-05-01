@@ -146,7 +146,7 @@ function PlaygroundPage() {
           {/* Endpoint sidebar */}
           <aside>
             <div className="rounded-xl border border-border bg-card p-2">
-              {["Filings", "Market"].map((group) => (
+              {["Filings", "Insider", "Market"].map((group) => (
                 <div key={group} className="mb-2 last:mb-0">
                   <p className="px-2 pt-2 pb-1 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
                     {group}
