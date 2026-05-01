@@ -27,10 +27,23 @@ const ENDPOINTS: { id: Endpoint; group: string }[] = [
   { id: "/filings", group: "Filings" },
   { id: "/company", group: "Filings" },
   { id: "/search", group: "Filings" },
+  { id: "/fundamentals", group: "Filings" },
+  { id: "/insider", group: "Insider" },
+  { id: "/clusters", group: "Insider" },
   { id: "/quote", group: "Market" },
   { id: "/bars", group: "Market" },
-  { id: "/fundamentals", group: "Market" },
 ];
+
+// Endpoints backed by real data in sec_filings — others use mock for now.
+const LIVE_ENDPOINTS = new Set<Endpoint>([
+  "/filings",
+  "/company",
+  "/search",
+  "/fundamentals",
+  "/insider",
+  "/clusters",
+  "/quote",
+]);
 
 function PlaygroundPage() {
   const { user, apiKey } = useAuth();
