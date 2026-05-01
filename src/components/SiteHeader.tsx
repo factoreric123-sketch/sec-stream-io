@@ -9,6 +9,9 @@ export function SiteHeader() {
 
   const navItems = [
     { to: "/docs" as const, label: "Docs" },
+    { to: "/playground" as const, label: "Playground" },
+    { to: "/changelog" as const, label: "Changelog" },
+    { to: "/status" as const, label: "Status" },
   ];
 
   return (
