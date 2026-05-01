@@ -77,6 +77,117 @@ export type Database = {
         }
         Relationships: []
       }
+      sec_filings: {
+        Row: {
+          accession_no: string
+          cash_and_equivalents: number | null
+          cik: string | null
+          cluster_count: number | null
+          company_name: string | null
+          current_ratio: number | null
+          debt_to_equity: number | null
+          delta_ownership: number | null
+          exchange: string | null
+          filed_at: string | null
+          fiscal_year_end: string | null
+          form_type: string | null
+          insider_name: string | null
+          insider_title: string | null
+          is_derivative: boolean | null
+          net_income: number | null
+          operating_cash_flow: number | null
+          period_of_report: string | null
+          price_per_share: number | null
+          revenue: number | null
+          security_title: string | null
+          shares_owned_after: number | null
+          shares_owned_before: number | null
+          sic: string | null
+          sic_description: string | null
+          ticker: string | null
+          total_assets: number | null
+          total_debt: number | null
+          total_equity: number | null
+          total_liabilities: number | null
+          total_value: number | null
+          transaction_code: string | null
+          transaction_date: string | null
+          transaction_shares: number | null
+        }
+        Insert: {
+          accession_no: string
+          cash_and_equivalents?: number | null
+          cik?: string | null
+          cluster_count?: number | null
+          company_name?: string | null
+          current_ratio?: number | null
+          debt_to_equity?: number | null
+          delta_ownership?: number | null
+          exchange?: string | null
+          filed_at?: string | null
+          fiscal_year_end?: string | null
+          form_type?: string | null
+          insider_name?: string | null
+          insider_title?: string | null
+          is_derivative?: boolean | null
+          net_income?: number | null
+          operating_cash_flow?: number | null
+          period_of_report?: string | null
+          price_per_share?: number | null
+          revenue?: number | null
+          security_title?: string | null
+          shares_owned_after?: number | null
+          shares_owned_before?: number | null
+          sic?: string | null
+          sic_description?: string | null
+          ticker?: string | null
+          total_assets?: number | null
+          total_debt?: number | null
+          total_equity?: number | null
+          total_liabilities?: number | null
+          total_value?: number | null
+          transaction_code?: string | null
+          transaction_date?: string | null
+          transaction_shares?: number | null
+        }
+        Update: {
+          accession_no?: string
+          cash_and_equivalents?: number | null
+          cik?: string | null
+          cluster_count?: number | null
+          company_name?: string | null
+          current_ratio?: number | null
+          debt_to_equity?: number | null
+          delta_ownership?: number | null
+          exchange?: string | null
+          filed_at?: string | null
+          fiscal_year_end?: string | null
+          form_type?: string | null
+          insider_name?: string | null
+          insider_title?: string | null
+          is_derivative?: boolean | null
+          net_income?: number | null
+          operating_cash_flow?: number | null
+          period_of_report?: string | null
+          price_per_share?: number | null
+          revenue?: number | null
+          security_title?: string | null
+          shares_owned_after?: number | null
+          shares_owned_before?: number | null
+          sic?: string | null
+          sic_description?: string | null
+          ticker?: string | null
+          total_assets?: number | null
+          total_debt?: number | null
+          total_equity?: number | null
+          total_liabilities?: number | null
+          total_value?: number | null
+          transaction_code?: string | null
+          transaction_date?: string | null
+          transaction_shares?: number | null
+        }
+        Relationships: []
+      }
       usage_logs: {
         Row: {
           created_at: string
