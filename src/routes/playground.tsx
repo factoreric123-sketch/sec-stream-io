@@ -27,10 +27,23 @@ const ENDPOINTS: { id: Endpoint; group: string }[] = [
   { id: "/filings", group: "Filings" },
   { id: "/company", group: "Filings" },
   { id: "/search", group: "Filings" },
+  { id: "/fundamentals", group: "Filings" },
+  { id: "/insider", group: "Insider" },
+  { id: "/clusters", group: "Insider" },
   { id: "/quote", group: "Market" },
   { id: "/bars", group: "Market" },
-  { id: "/fundamentals", group: "Market" },
 ];
+
+// Endpoints backed by real data in sec_filings — others use mock for now.
+const LIVE_ENDPOINTS = new Set<Endpoint>([
+  "/filings",
+  "/company",
+  "/search",
+  "/fundamentals",
+  "/insider",
+  "/clusters",
+  "/quote",
+]);
 
 function PlaygroundPage() {
   const { user, apiKey } = useAuth();
@@ -38,10 +51,11 @@ function PlaygroundPage() {
   const [params, setParams] = useState<Record<string, string>>({
     ticker: "AAPL",
     type: "10-K",
-    include: "market",
+    limit: "25",
   });
   const [response, setResponse] = useState<PlaygroundResponse | null>(null);
   const [running, setRunning] = useState(false);
+  const [useLive, setUseLive] = useState(true);
 
   const paramDefs = ENDPOINT_PARAMS[endpoint];
   const queryString = useMemo(() => {
@@ -53,17 +67,42 @@ function PlaygroundPage() {
   }, [params, paramDefs]);
 
   const keyDisplay = apiKey ? apiKey.keyPlaintext.slice(0, 14) + "..." : "sk_live_demo_...";
+  const isLive = useLive && !!apiKey && LIVE_ENDPOINTS.has(endpoint);
 
   const curl = `curl https://api.secstream.dev/v1${endpoint}${queryString} \\
   -H "Authorization: Bearer ${keyDisplay}"`;
 
-  const onRun = () => {
+  const onRun = async () => {
     setRunning(true);
+    const start = Date.now();
+
+    if (isLive && apiKey) {
+      try {
+        const res = await fetch(`/api/public/v1${endpoint.slice(1)}${queryString}`, {
+          headers: { Authorization: `Bearer ${apiKey.keyPlaintext}` },
+        });
+        const body = await res.json();
+        setResponse({
+          status: res.status,
+          latencyMs: Number(res.headers.get("X-Response-Time-Ms")) || Date.now() - start,
+          body,
+        });
+      } catch (e) {
+        setResponse({
+          status: 0,
+          latencyMs: Date.now() - start,
+          body: { error: "network_error", message: e instanceof Error ? e.message : String(e) },
+        });
+      }
+      setRunning(false);
+      return;
+    }
+
+    // Mock fallback (signed-out, or endpoints without live data yet like /bars)
     const result = mockResponse({ endpoint, params });
     window.setTimeout(async () => {
       setResponse(result);
       setRunning(false);
-      // Log to Supabase if signed in
       if (user) {
         await supabase.from("usage_logs").insert({
           user_id: user.id,
@@ -107,7 +146,7 @@ function PlaygroundPage() {
           {/* Endpoint sidebar */}
           <aside>
             <div className="rounded-xl border border-border bg-card p-2">
-              {["Filings", "Market"].map((group) => (
+              {["Filings", "Insider", "Market"].map((group) => (
                 <div key={group} className="mb-2 last:mb-0">
                   <p className="px-2 pt-2 pb-1 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
                     {group}
@@ -161,6 +200,18 @@ function PlaygroundPage() {
                 <div className="flex items-center justify-between pt-1">
                   <p className="font-mono text-[11px] text-muted-foreground">
                     Auth: <span className="text-foreground">Bearer {keyDisplay}</span>
+                    {apiKey && LIVE_ENDPOINTS.has(endpoint) && (
+                      <button
+                        type="button"
+                        onClick={() => setUseLive((v) => !v)}
+                        className={`ml-3 rounded px-1.5 py-0.5 text-[10px] uppercase tracking-wider ${
+                          isLive ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"
+                        }`}
+                        title="Toggle live API vs mock"
+                      >
+                        {isLive ? "Live" : "Mock"}
+                      </button>
+                    )}
                   </p>
                   <Button onClick={onRun} disabled={running} size="sm" className="btn-glow">
                     {running ? (

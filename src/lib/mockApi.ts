@@ -7,7 +7,9 @@ export type Endpoint =
   | "/search"
   | "/quote"
   | "/bars"
-  | "/fundamentals";
+  | "/fundamentals"
+  | "/insider"
+  | "/clusters";
 
 export type PlaygroundRequest = {
   endpoint: Endpoint;
@@ -187,6 +189,34 @@ export function mockResponse(req: PlaygroundRequest): PlaygroundResponse {
         },
       };
     }
+    case "/insider": {
+      const txns = Array.from({ length: 5 }, (_, i) => {
+        const s = seedFromString(ticker + "i" + i);
+        const shares = Math.round(2000 + s * 18000);
+        return {
+          insider_name: ["Tim Cook", "Luca Maestri", "Katherine Adams", "Deirdre O'Brien"][i % 4],
+          insider_title: ["CEO", "CFO", "General Counsel", "SVP Retail"][i % 4],
+          transaction_code: s > 0.5 ? "S" : "P",
+          transaction_date: new Date(Date.now() - i * 86_400_000 * 6).toISOString().slice(0, 10),
+          shares,
+          price_per_share: round(px - s * 4),
+          total_value: Math.round(shares * (px - s * 4)),
+          cluster_count: i < 2 ? 4 : 1,
+        };
+      });
+      return { status: 200, latencyMs: latency, body: { ticker, count: txns.length, transactions: txns } };
+    }
+    case "/clusters": {
+      const clusters = Array.from({ length: 3 }, (_, i) => ({
+        ticker,
+        company_name: c.name,
+        insider_count: 4 - i,
+        cluster_count: 4 - i,
+        window_start: new Date(Date.now() - (i + 1) * 86_400_000 * 14).toISOString().slice(0, 10),
+        total_value: Math.round((1_200_000 - i * 320_000) * (1 + seedFromString(ticker + "c" + i))),
+      }));
+      return { status: 200, latencyMs: latency, body: { count: clusters.length, clusters } };
+    }
   }
 }
 
@@ -194,7 +224,7 @@ export const ENDPOINT_PARAMS: Record<Endpoint, { name: string; example: string; 
   "/filings": [
     { name: "ticker", example: "AAPL", required: true },
     { name: "type", example: "10-K" },
-    { name: "include", example: "market" },
+    { name: "limit", example: "25" },
   ],
   "/company": [{ name: "ticker", example: "AAPL", required: true }],
   "/search": [{ name: "q", example: "apple", required: true }],
@@ -203,5 +233,17 @@ export const ENDPOINT_PARAMS: Record<Endpoint, { name: string; example: string; 
     { name: "ticker", example: "AAPL", required: true },
     { name: "timeframe", example: "1d" },
   ],
-  "/fundamentals": [{ name: "ticker", example: "AAPL", required: true }],
+  "/fundamentals": [
+    { name: "ticker", example: "AAPL", required: true },
+    { name: "periods", example: "4" },
+  ],
+  "/insider": [
+    { name: "ticker", example: "AAPL", required: true },
+    { name: "limit", example: "25" },
+  ],
+  "/clusters": [
+    { name: "ticker", example: "AAPL" },
+    { name: "min", example: "2" },
+    { name: "limit", example: "25" },
+  ],
 };

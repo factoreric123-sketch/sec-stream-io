@@ -17,6 +17,13 @@ import { Route as DocsRouteImport } from './routes/docs'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ChangelogRouteImport } from './routes/changelog'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiPublicV1SearchRouteImport } from './routes/api/public/v1/search'
+import { Route as ApiPublicV1QuoteRouteImport } from './routes/api/public/v1/quote'
+import { Route as ApiPublicV1InsiderRouteImport } from './routes/api/public/v1/insider'
+import { Route as ApiPublicV1FundamentalsRouteImport } from './routes/api/public/v1/fundamentals'
+import { Route as ApiPublicV1FilingsRouteImport } from './routes/api/public/v1/filings'
+import { Route as ApiPublicV1CompanyRouteImport } from './routes/api/public/v1/company'
+import { Route as ApiPublicV1ClustersRouteImport } from './routes/api/public/v1/clusters'
 
 const StatusRoute = StatusRouteImport.update({
   id: '/status',
@@ -58,6 +65,41 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicV1SearchRoute = ApiPublicV1SearchRouteImport.update({
+  id: '/api/public/v1/search',
+  path: '/api/public/v1/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicV1QuoteRoute = ApiPublicV1QuoteRouteImport.update({
+  id: '/api/public/v1/quote',
+  path: '/api/public/v1/quote',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicV1InsiderRoute = ApiPublicV1InsiderRouteImport.update({
+  id: '/api/public/v1/insider',
+  path: '/api/public/v1/insider',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicV1FundamentalsRoute = ApiPublicV1FundamentalsRouteImport.update({
+  id: '/api/public/v1/fundamentals',
+  path: '/api/public/v1/fundamentals',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicV1FilingsRoute = ApiPublicV1FilingsRouteImport.update({
+  id: '/api/public/v1/filings',
+  path: '/api/public/v1/filings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicV1CompanyRoute = ApiPublicV1CompanyRouteImport.update({
+  id: '/api/public/v1/company',
+  path: '/api/public/v1/company',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicV1ClustersRoute = ApiPublicV1ClustersRouteImport.update({
+  id: '/api/public/v1/clusters',
+  path: '/api/public/v1/clusters',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -68,6 +110,13 @@ export interface FileRoutesByFullPath {
   '/playground': typeof PlaygroundRoute
   '/signup': typeof SignupRoute
   '/status': typeof StatusRoute
+  '/api/public/v1/clusters': typeof ApiPublicV1ClustersRoute
+  '/api/public/v1/company': typeof ApiPublicV1CompanyRoute
+  '/api/public/v1/filings': typeof ApiPublicV1FilingsRoute
+  '/api/public/v1/fundamentals': typeof ApiPublicV1FundamentalsRoute
+  '/api/public/v1/insider': typeof ApiPublicV1InsiderRoute
+  '/api/public/v1/quote': typeof ApiPublicV1QuoteRoute
+  '/api/public/v1/search': typeof ApiPublicV1SearchRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -78,6 +127,13 @@ export interface FileRoutesByTo {
   '/playground': typeof PlaygroundRoute
   '/signup': typeof SignupRoute
   '/status': typeof StatusRoute
+  '/api/public/v1/clusters': typeof ApiPublicV1ClustersRoute
+  '/api/public/v1/company': typeof ApiPublicV1CompanyRoute
+  '/api/public/v1/filings': typeof ApiPublicV1FilingsRoute
+  '/api/public/v1/fundamentals': typeof ApiPublicV1FundamentalsRoute
+  '/api/public/v1/insider': typeof ApiPublicV1InsiderRoute
+  '/api/public/v1/quote': typeof ApiPublicV1QuoteRoute
+  '/api/public/v1/search': typeof ApiPublicV1SearchRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -89,6 +145,13 @@ export interface FileRoutesById {
   '/playground': typeof PlaygroundRoute
   '/signup': typeof SignupRoute
   '/status': typeof StatusRoute
+  '/api/public/v1/clusters': typeof ApiPublicV1ClustersRoute
+  '/api/public/v1/company': typeof ApiPublicV1CompanyRoute
+  '/api/public/v1/filings': typeof ApiPublicV1FilingsRoute
+  '/api/public/v1/fundamentals': typeof ApiPublicV1FundamentalsRoute
+  '/api/public/v1/insider': typeof ApiPublicV1InsiderRoute
+  '/api/public/v1/quote': typeof ApiPublicV1QuoteRoute
+  '/api/public/v1/search': typeof ApiPublicV1SearchRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -101,6 +164,13 @@ export interface FileRouteTypes {
     | '/playground'
     | '/signup'
     | '/status'
+    | '/api/public/v1/clusters'
+    | '/api/public/v1/company'
+    | '/api/public/v1/filings'
+    | '/api/public/v1/fundamentals'
+    | '/api/public/v1/insider'
+    | '/api/public/v1/quote'
+    | '/api/public/v1/search'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -111,6 +181,13 @@ export interface FileRouteTypes {
     | '/playground'
     | '/signup'
     | '/status'
+    | '/api/public/v1/clusters'
+    | '/api/public/v1/company'
+    | '/api/public/v1/filings'
+    | '/api/public/v1/fundamentals'
+    | '/api/public/v1/insider'
+    | '/api/public/v1/quote'
+    | '/api/public/v1/search'
   id:
     | '__root__'
     | '/'
@@ -121,6 +198,13 @@ export interface FileRouteTypes {
     | '/playground'
     | '/signup'
     | '/status'
+    | '/api/public/v1/clusters'
+    | '/api/public/v1/company'
+    | '/api/public/v1/filings'
+    | '/api/public/v1/fundamentals'
+    | '/api/public/v1/insider'
+    | '/api/public/v1/quote'
+    | '/api/public/v1/search'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -132,6 +216,13 @@ export interface RootRouteChildren {
   PlaygroundRoute: typeof PlaygroundRoute
   SignupRoute: typeof SignupRoute
   StatusRoute: typeof StatusRoute
+  ApiPublicV1ClustersRoute: typeof ApiPublicV1ClustersRoute
+  ApiPublicV1CompanyRoute: typeof ApiPublicV1CompanyRoute
+  ApiPublicV1FilingsRoute: typeof ApiPublicV1FilingsRoute
+  ApiPublicV1FundamentalsRoute: typeof ApiPublicV1FundamentalsRoute
+  ApiPublicV1InsiderRoute: typeof ApiPublicV1InsiderRoute
+  ApiPublicV1QuoteRoute: typeof ApiPublicV1QuoteRoute
+  ApiPublicV1SearchRoute: typeof ApiPublicV1SearchRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -192,6 +283,55 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/v1/search': {
+      id: '/api/public/v1/search'
+      path: '/api/public/v1/search'
+      fullPath: '/api/public/v1/search'
+      preLoaderRoute: typeof ApiPublicV1SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/v1/quote': {
+      id: '/api/public/v1/quote'
+      path: '/api/public/v1/quote'
+      fullPath: '/api/public/v1/quote'
+      preLoaderRoute: typeof ApiPublicV1QuoteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/v1/insider': {
+      id: '/api/public/v1/insider'
+      path: '/api/public/v1/insider'
+      fullPath: '/api/public/v1/insider'
+      preLoaderRoute: typeof ApiPublicV1InsiderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/v1/fundamentals': {
+      id: '/api/public/v1/fundamentals'
+      path: '/api/public/v1/fundamentals'
+      fullPath: '/api/public/v1/fundamentals'
+      preLoaderRoute: typeof ApiPublicV1FundamentalsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/v1/filings': {
+      id: '/api/public/v1/filings'
+      path: '/api/public/v1/filings'
+      fullPath: '/api/public/v1/filings'
+      preLoaderRoute: typeof ApiPublicV1FilingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/v1/company': {
+      id: '/api/public/v1/company'
+      path: '/api/public/v1/company'
+      fullPath: '/api/public/v1/company'
+      preLoaderRoute: typeof ApiPublicV1CompanyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/v1/clusters': {
+      id: '/api/public/v1/clusters'
+      path: '/api/public/v1/clusters'
+      fullPath: '/api/public/v1/clusters'
+      preLoaderRoute: typeof ApiPublicV1ClustersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -204,6 +344,13 @@ const rootRouteChildren: RootRouteChildren = {
   PlaygroundRoute: PlaygroundRoute,
   SignupRoute: SignupRoute,
   StatusRoute: StatusRoute,
+  ApiPublicV1ClustersRoute: ApiPublicV1ClustersRoute,
+  ApiPublicV1CompanyRoute: ApiPublicV1CompanyRoute,
+  ApiPublicV1FilingsRoute: ApiPublicV1FilingsRoute,
+  ApiPublicV1FundamentalsRoute: ApiPublicV1FundamentalsRoute,
+  ApiPublicV1InsiderRoute: ApiPublicV1InsiderRoute,
+  ApiPublicV1QuoteRoute: ApiPublicV1QuoteRoute,
+  ApiPublicV1SearchRoute: ApiPublicV1SearchRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
