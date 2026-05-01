@@ -56,6 +56,7 @@ export type Database = {
           email: string
           id: string
           plan: string
+          rate_limit_per_min: number
           renewal_date: string
           updated_at: string
         }
@@ -64,6 +65,7 @@ export type Database = {
           email: string
           id: string
           plan?: string
+          rate_limit_per_min?: number
           renewal_date?: string
           updated_at?: string
         }
@@ -72,6 +74,7 @@ export type Database = {
           email?: string
           id?: string
           plan?: string
+          rate_limit_per_min?: number
           renewal_date?: string
           updated_at?: string
         }
