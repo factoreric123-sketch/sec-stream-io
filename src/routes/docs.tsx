@@ -15,12 +15,18 @@ export const Route = createFileRoute("/docs")({
 const sections = [
   { id: "intro", label: "Introduction" },
   { id: "auth", label: "Authentication" },
+  { group: "Filings" },
   { id: "filings", label: "GET /filings" },
   { id: "company", label: "GET /company" },
   { id: "search", label: "GET /search" },
+  { group: "Market data" },
+  { id: "quote", label: "GET /quote" },
+  { id: "bars", label: "GET /bars" },
+  { id: "fundamentals", label: "GET /fundamentals" },
+  { group: "System" },
   { id: "errors", label: "Errors" },
   { id: "limits", label: "Rate limits" },
-];
+] as Array<{ id: string; label: string } | { group: string }>;
 
 function DocsPage() {
   return (

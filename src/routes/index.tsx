@@ -1,37 +1,48 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Check, Zap, Database, Code2, ShieldCheck } from "lucide-react";
+import { ArrowRight, Check, Zap, Database, Code2, ShieldCheck, LineChart, Layers, X } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { CodeBlock } from "@/components/CodeBlock";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "SECStream — SEC filings + market data in one API" },
+      { name: "description", content: "The only API that combines SEC EDGAR filings with live market data. Query a 10-K and get the price reaction in the same call. $10/month, flat." },
+      { property: "og:title", content: "SECStream — SEC filings + market data in one API" },
+      { property: "og:description", content: "Filings + prices in one call. $10/month, flat. Built for traders, analysts, and developers." },
+    ],
+  }),
   component: LandingPage,
 });
 
-const exampleResponse = `{
+const combinedResponse = `{
   "company": "Apple Inc.",
   "ticker": "AAPL",
-  "cik": "0000320193",
   "filing_type": "10-K",
   "filing_date": "2024-11-01",
-  "period_of_report": "2024-09-28",
-  "accession_number": "0000320193-24-000123",
-  "url": "https://www.sec.gov/Archives/edgar/data/320193/...",
   "sections": {
-    "business": "Apple Inc. designs, manufactures...",
     "risk_factors": "The Company's business...",
     "md_and_a": "Fiscal 2024 highlights..."
   },
   "financials": {
     "revenue": 391035000000,
-    "net_income": 93736000000,
-    "currency": "USD"
+    "net_income": 93736000000
+  },
+  "market": {
+    "price_at_filing": 222.91,
+    "price_t_plus_1d": 222.01,
+    "price_t_plus_7d": 229.54,
+    "reaction_7d_pct": 2.97,
+    "volume_t_plus_1d": 56822500,
+    "market_cap": 3380000000000
   }
 }`;
 
 const curlExample = `curl https://api.secstream.dev/v1/filings \\
   -H "Authorization: Bearer sk_live_..." \\
-  -G -d ticker=AAPL -d type=10-K`;
+  -G -d ticker=AAPL -d type=10-K \\
+  -d include=market`;
 
 function LandingPage() {
   return (
@@ -46,16 +57,16 @@ function LandingPage() {
           <div className="mx-auto max-w-3xl text-center animate-fade-up">
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border/80 bg-card/60 px-3 py-1 text-xs text-muted-foreground backdrop-blur">
               <span className="dot bg-success animate-pulse-slow" />
-              <span className="font-mono">v1 API · live</span>
+              <span className="font-mono">filings + market data · v1 live</span>
             </div>
             <h1 className="text-4xl font-semibold leading-[1.05] tracking-tight md:text-6xl text-gradient">
-              SEC filings in seconds.
+              SEC filings and market data.
               <br />
-              Clean, structured, API-ready.
+              One API. One key.
             </h1>
             <p className="mx-auto mt-6 max-w-xl text-balance text-base text-muted-foreground md:text-lg">
-              The fastest way to query EDGAR. One endpoint, one key, one flat price.
-              Built for developers who don't want to parse XBRL.
+              Query a 10-K and get the price reaction in the same call.
+              The only API that joins EDGAR filings with quotes, bars, and fundamentals — for $10/month.
             </p>
             <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Button asChild size="lg" className="btn-glow">
@@ -78,22 +89,29 @@ function LandingPage() {
             <div className="absolute inset-x-12 -inset-y-4 rounded-2xl bg-primary/10 blur-3xl" />
             <div className="relative grid gap-3 md:grid-cols-[1fr_1.2fr]">
               <CodeBlock code={curlExample} filename="request.sh" />
-              <CodeBlock code={exampleResponse} filename="response.json" />
+              <CodeBlock code={combinedResponse} filename="response.json" />
             </div>
+            <p className="mt-4 text-center font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+              ↑ filing + financials + price reaction · one request
+            </p>
           </div>
         </div>
       </section>
 
-      {/* What you get */}
+      {/* The pitch */}
       <section className="border-t border-border/60 py-20">
         <div className="mx-auto max-w-6xl px-6">
-          <div className="mb-12 max-w-xl">
+          <div className="mb-12 max-w-2xl">
             <p className="font-mono text-xs uppercase tracking-[0.2em] text-primary">
-              What you get
+              Why SECStream
             </p>
             <h2 className="mt-2 text-3xl font-semibold tracking-tight md:text-4xl">
-              An API that actually feels designed.
+              Filings and prices belong together.
             </h2>
+            <p className="mt-3 text-muted-foreground">
+              Every other API forces you to stitch two sources. We do it server-side, cached,
+              and return the joined object in milliseconds.
+            </p>
           </div>
           <div className="grid gap-px overflow-hidden rounded-xl border border-border bg-border md:grid-cols-3">
             {[
@@ -103,6 +121,16 @@ function LandingPage() {
                 body: "10-K, 10-Q, 8-K, S-1, and more — parsed into clean JSON with extracted sections.",
               },
               {
+                icon: LineChart,
+                title: "Live market data",
+                body: "Real-time quotes, OHLCV bars, and fundamentals. Every ticker EDGAR covers, we price.",
+              },
+              {
+                icon: Layers,
+                title: "The combined endpoint",
+                body: "?include=market on /filings returns price at filing, +1d, +7d. Backtest catalysts in one call.",
+              },
+              {
                 icon: Zap,
                 title: "Fast responses",
                 body: "Aggressively cached. P95 under 120ms for hot tickers. No XBRL parsing on your end.",
@@ -110,22 +138,12 @@ function LandingPage() {
               {
                 icon: Code2,
                 title: "One endpoint to learn",
-                body: "Query by ticker, form type, or date range. Predictable params. No SDK needed.",
+                body: "Predictable params, JSON in, JSON out. No SDK needed. Works from any language.",
               },
               {
                 icon: ShieldCheck,
-                title: "Authenticated by key",
-                body: "Bearer token auth. Rotate anytime from your dashboard. Per-key request logs.",
-              },
-              {
-                icon: Database,
-                title: "Real-time updates",
-                body: "New filings indexed within minutes of EDGAR publication.",
-              },
-              {
-                icon: Code2,
                 title: "Built for builders",
-                body: "Traders, analysts, devs. Use it for screeners, backtests, or LLM pipelines.",
+                body: "Bearer auth. Per-request logs. Webhooks for new filings. Rotate keys anytime.",
               },
             ].map((f) => (
               <div key={f.title} className="bg-card p-6">
@@ -138,24 +156,80 @@ function LandingPage() {
         </div>
       </section>
 
+      {/* Comparison */}
+      <section className="border-t border-border/60 py-20">
+        <div className="mx-auto max-w-5xl px-6">
+          <div className="mb-10 max-w-2xl">
+            <p className="font-mono text-xs uppercase tracking-[0.2em] text-primary">
+              How we compare
+            </p>
+            <h2 className="mt-2 text-3xl font-semibold tracking-tight md:text-4xl">
+              Two APIs in one. A fraction of the price.
+            </h2>
+          </div>
+
+          <div className="overflow-hidden rounded-xl border border-border bg-card">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-border bg-background/40 text-xs uppercase tracking-wider text-muted-foreground">
+                <tr>
+                  <th className="px-5 py-3 font-mono">Feature</th>
+                  <th className="px-5 py-3 font-mono">
+                    <span className="text-primary">SECStream</span>
+                  </th>
+                  <th className="px-5 py-3 font-mono">sec-api.io</th>
+                  <th className="px-5 py-3 font-mono">polygon.io</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  ["SEC filings (parsed)", true, true, false],
+                  ["Real-time market data", true, false, true],
+                  ["Filing + price reaction", true, false, false],
+                  ["Single endpoint, one key", true, false, false],
+                  ["Starts at $10/month", true, false, false],
+                ].map(([label, a, b, c]) => (
+                  <tr key={label as string} className="border-b border-border/60 last:border-0">
+                    <td className="px-5 py-3.5">{label}</td>
+                    <Cell on={a as boolean} highlight />
+                    <Cell on={b as boolean} />
+                    <Cell on={c as boolean} />
+                  </tr>
+                ))}
+                <tr>
+                  <td className="px-5 py-3.5 font-mono text-xs uppercase tracking-wider text-muted-foreground">
+                    Entry price
+                  </td>
+                  <td className="px-5 py-3.5 font-mono font-semibold text-primary">$10/mo</td>
+                  <td className="px-5 py-3.5 font-mono text-muted-foreground">$99/mo</td>
+                  <td className="px-5 py-3.5 font-mono text-muted-foreground">$29/mo</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p className="mt-3 font-mono text-[11px] text-muted-foreground">
+            * Competitor pricing per public sites. SECStream gives you both data sources for less than either alone.
+          </p>
+        </div>
+      </section>
+
       {/* Who it's for */}
       <section className="border-t border-border/60 py-20">
         <div className="mx-auto grid max-w-6xl gap-12 px-6 md:grid-cols-3">
           {[
             {
               tag: "Traders",
-              title: "Move on filings before the news cycle.",
-              body: "Stream 8-Ks the moment they hit EDGAR. Build alerting pipelines without scraping.",
+              title: "Trade the catalyst, not the headline.",
+              body: "Stream 8-Ks the moment they hit EDGAR — with the live quote already attached. Zero stitching.",
             },
             {
-              tag: "Analysts",
-              title: "Skip the manual Ctrl-F.",
-              body: "Get pre-extracted Risk Factors, MD&A, and financial sections as plain text.",
+              tag: "Quants",
+              title: "Backtest filings against price.",
+              body: "Pull 10 years of 10-Qs with t+1d / t+7d returns pre-joined. Skip the data engineering.",
             },
             {
-              tag: "Developers",
-              title: "Ship the feature, not the parser.",
-              body: "Drop one HTTP call into your stack. We handle EDGAR's quirks so you don't have to.",
+              tag: "Builders",
+              title: "Ship screeners and dashboards faster.",
+              body: "Filings, fundamentals, and prices behind one bearer token. One bill. One vendor.",
             },
           ].map((p) => (
             <div key={p.tag}>
@@ -175,7 +249,7 @@ function LandingPage() {
             One plan. No tiers. No sales calls.
           </h2>
           <p className="mt-3 text-muted-foreground">
-            Competitors charge thousands. We charge ten dollars.
+            Filings <span className="text-foreground">and</span> market data. Ten dollars.
           </p>
 
           <div className="relative mx-auto mt-12 max-w-md overflow-hidden rounded-2xl border border-border bg-card p-8 text-left">
@@ -188,12 +262,12 @@ function LandingPage() {
 
             <ul className="mt-6 space-y-3 text-sm">
               {[
-                "Unlimited endpoints (/filings, /company, /search)",
+                "All filings endpoints (/filings, /company, /search)",
+                "All market endpoints (/quote, /bars, /fundamentals)",
+                "Combined endpoint: filing + price reaction",
                 "100,000 requests / month",
-                "All filing types (10-K, 10-Q, 8-K, S-1, …)",
-                "Real-time filing indexing",
-                "Per-request usage logs",
-                "Cancel anytime",
+                "Real-time filing indexing + webhooks",
+                "Per-request usage logs · Cancel anytime",
               ].map((f) => (
                 <li key={f} className="flex items-start gap-2.5">
                   <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
@@ -226,5 +300,17 @@ function LandingPage() {
         </div>
       </footer>
     </div>
+  );
+}
+
+function Cell({ on, highlight }: { on: boolean; highlight?: boolean }) {
+  return (
+    <td className={`px-5 py-3.5 ${highlight ? "bg-primary/[0.04]" : ""}`}>
+      {on ? (
+        <Check className={`h-4 w-4 ${highlight ? "text-primary" : "text-success"}`} />
+      ) : (
+        <X className="h-4 w-4 text-muted-foreground/50" />
+      )}
+    </td>
   );
 }
