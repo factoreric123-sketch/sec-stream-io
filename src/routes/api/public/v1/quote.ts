@@ -1,17 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { handlePublicApi, requireParam } from "@/server/apiAuth.server";
+import { apiError, handlePublicApi, requireParam } from "@/server/apiAuth.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 // Market quote endpoint. We don't yet have a live market feed wired up,
 // so this returns the most recent insider transaction price as a proxy.
-// Replace `priceFromMarketFeed` with your real provider when ready.
 export const Route = createFileRoute("/api/public/v1/quote")({
   server: {
     handlers: {
       GET: async ({ request }) =>
         handlePublicApi(request, "/v1/quote", async ({ url }) => {
           const ticker = requireParam(url, "ticker");
-          if (!ticker) return { ok: false, status: 400, error: "missing required param: ticker" };
+          if (!ticker)
+            return apiError("missing_param", "Missing required parameter: ticker", 400, {
+              param: "ticker",
+            });
 
           const { data, error } = await supabaseAdmin
             .from("sec_filings")
@@ -22,7 +24,7 @@ export const Route = createFileRoute("/api/public/v1/quote")({
             .limit(1)
             .maybeSingle();
 
-          if (error) return { ok: false, status: 500, error: error.message };
+          if (error) return apiError("internal_error", error.message, 500);
 
           return {
             ok: true,
