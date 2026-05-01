@@ -26,6 +26,7 @@ import { Route as ApiPublicV1FundamentalsRouteImport } from './routes/api/public
 import { Route as ApiPublicV1FilingsRouteImport } from './routes/api/public/v1/filings'
 import { Route as ApiPublicV1CompanyRouteImport } from './routes/api/public/v1/company'
 import { Route as ApiPublicV1ClustersRouteImport } from './routes/api/public/v1/clusters'
+import { Route as ApiPublicV1FilingsBatchRouteImport } from './routes/api/public/v1/filings.batch'
 import { Route as ApiPublicV1InternalDispatchWebhooksRouteImport } from './routes/api/public/v1/_internal/dispatch-webhooks'
 
 const StatusRoute = StatusRouteImport.update({
@@ -113,6 +114,11 @@ const ApiPublicV1ClustersRoute = ApiPublicV1ClustersRouteImport.update({
   path: '/api/public/v1/clusters',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicV1FilingsBatchRoute = ApiPublicV1FilingsBatchRouteImport.update({
+  id: '/batch',
+  path: '/batch',
+  getParentRoute: () => ApiPublicV1FilingsRoute,
+} as any)
 const ApiPublicV1InternalDispatchWebhooksRoute =
   ApiPublicV1InternalDispatchWebhooksRouteImport.update({
     id: '/api/public/v1/_internal/dispatch-webhooks',
@@ -133,12 +139,13 @@ export interface FileRoutesByFullPath {
   '/docs/sdk': typeof DocsSdkRoute
   '/api/public/v1/clusters': typeof ApiPublicV1ClustersRoute
   '/api/public/v1/company': typeof ApiPublicV1CompanyRoute
-  '/api/public/v1/filings': typeof ApiPublicV1FilingsRoute
+  '/api/public/v1/filings': typeof ApiPublicV1FilingsRouteWithChildren
   '/api/public/v1/fundamentals': typeof ApiPublicV1FundamentalsRoute
   '/api/public/v1/insider': typeof ApiPublicV1InsiderRoute
   '/api/public/v1/quote': typeof ApiPublicV1QuoteRoute
   '/api/public/v1/search': typeof ApiPublicV1SearchRoute
   '/api/public/v1/dispatch-webhooks': typeof ApiPublicV1InternalDispatchWebhooksRoute
+  '/api/public/v1/filings/batch': typeof ApiPublicV1FilingsBatchRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -153,12 +160,13 @@ export interface FileRoutesByTo {
   '/docs/sdk': typeof DocsSdkRoute
   '/api/public/v1/clusters': typeof ApiPublicV1ClustersRoute
   '/api/public/v1/company': typeof ApiPublicV1CompanyRoute
-  '/api/public/v1/filings': typeof ApiPublicV1FilingsRoute
+  '/api/public/v1/filings': typeof ApiPublicV1FilingsRouteWithChildren
   '/api/public/v1/fundamentals': typeof ApiPublicV1FundamentalsRoute
   '/api/public/v1/insider': typeof ApiPublicV1InsiderRoute
   '/api/public/v1/quote': typeof ApiPublicV1QuoteRoute
   '/api/public/v1/search': typeof ApiPublicV1SearchRoute
   '/api/public/v1/dispatch-webhooks': typeof ApiPublicV1InternalDispatchWebhooksRoute
+  '/api/public/v1/filings/batch': typeof ApiPublicV1FilingsBatchRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -174,12 +182,13 @@ export interface FileRoutesById {
   '/docs/sdk': typeof DocsSdkRoute
   '/api/public/v1/clusters': typeof ApiPublicV1ClustersRoute
   '/api/public/v1/company': typeof ApiPublicV1CompanyRoute
-  '/api/public/v1/filings': typeof ApiPublicV1FilingsRoute
+  '/api/public/v1/filings': typeof ApiPublicV1FilingsRouteWithChildren
   '/api/public/v1/fundamentals': typeof ApiPublicV1FundamentalsRoute
   '/api/public/v1/insider': typeof ApiPublicV1InsiderRoute
   '/api/public/v1/quote': typeof ApiPublicV1QuoteRoute
   '/api/public/v1/search': typeof ApiPublicV1SearchRoute
   '/api/public/v1/_internal/dispatch-webhooks': typeof ApiPublicV1InternalDispatchWebhooksRoute
+  '/api/public/v1/filings/batch': typeof ApiPublicV1FilingsBatchRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -202,6 +211,7 @@ export interface FileRouteTypes {
     | '/api/public/v1/quote'
     | '/api/public/v1/search'
     | '/api/public/v1/dispatch-webhooks'
+    | '/api/public/v1/filings/batch'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -222,6 +232,7 @@ export interface FileRouteTypes {
     | '/api/public/v1/quote'
     | '/api/public/v1/search'
     | '/api/public/v1/dispatch-webhooks'
+    | '/api/public/v1/filings/batch'
   id:
     | '__root__'
     | '/'
@@ -242,6 +253,7 @@ export interface FileRouteTypes {
     | '/api/public/v1/quote'
     | '/api/public/v1/search'
     | '/api/public/v1/_internal/dispatch-webhooks'
+    | '/api/public/v1/filings/batch'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -256,7 +268,7 @@ export interface RootRouteChildren {
   StatusRoute: typeof StatusRoute
   ApiPublicV1ClustersRoute: typeof ApiPublicV1ClustersRoute
   ApiPublicV1CompanyRoute: typeof ApiPublicV1CompanyRoute
-  ApiPublicV1FilingsRoute: typeof ApiPublicV1FilingsRoute
+  ApiPublicV1FilingsRoute: typeof ApiPublicV1FilingsRouteWithChildren
   ApiPublicV1FundamentalsRoute: typeof ApiPublicV1FundamentalsRoute
   ApiPublicV1InsiderRoute: typeof ApiPublicV1InsiderRoute
   ApiPublicV1QuoteRoute: typeof ApiPublicV1QuoteRoute
@@ -385,6 +397,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicV1ClustersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/v1/filings/batch': {
+      id: '/api/public/v1/filings/batch'
+      path: '/batch'
+      fullPath: '/api/public/v1/filings/batch'
+      preLoaderRoute: typeof ApiPublicV1FilingsBatchRouteImport
+      parentRoute: typeof ApiPublicV1FilingsRoute
+    }
     '/api/public/v1/_internal/dispatch-webhooks': {
       id: '/api/public/v1/_internal/dispatch-webhooks'
       path: '/api/public/v1/dispatch-webhooks'
@@ -405,6 +424,17 @@ const DocsRouteChildren: DocsRouteChildren = {
 
 const DocsRouteWithChildren = DocsRoute._addFileChildren(DocsRouteChildren)
 
+interface ApiPublicV1FilingsRouteChildren {
+  ApiPublicV1FilingsBatchRoute: typeof ApiPublicV1FilingsBatchRoute
+}
+
+const ApiPublicV1FilingsRouteChildren: ApiPublicV1FilingsRouteChildren = {
+  ApiPublicV1FilingsBatchRoute: ApiPublicV1FilingsBatchRoute,
+}
+
+const ApiPublicV1FilingsRouteWithChildren =
+  ApiPublicV1FilingsRoute._addFileChildren(ApiPublicV1FilingsRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
@@ -417,7 +447,7 @@ const rootRouteChildren: RootRouteChildren = {
   StatusRoute: StatusRoute,
   ApiPublicV1ClustersRoute: ApiPublicV1ClustersRoute,
   ApiPublicV1CompanyRoute: ApiPublicV1CompanyRoute,
-  ApiPublicV1FilingsRoute: ApiPublicV1FilingsRoute,
+  ApiPublicV1FilingsRoute: ApiPublicV1FilingsRouteWithChildren,
   ApiPublicV1FundamentalsRoute: ApiPublicV1FundamentalsRoute,
   ApiPublicV1InsiderRoute: ApiPublicV1InsiderRoute,
   ApiPublicV1QuoteRoute: ApiPublicV1QuoteRoute,
