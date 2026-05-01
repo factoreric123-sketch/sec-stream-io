@@ -212,12 +212,14 @@ function QuickstartPanel({ apiKey }: { apiKey: string }) {
 
   const curl = `curl https://api.secstream.dev/v1/filings \\
   -H "Authorization: Bearer ${display}" \\
-  -G -d ticker=AAPL -d type=10-K`;
+  -G -d ticker=AAPL -d type=10-K \\
+  -d include=market`;
 
   const js = `const res = await fetch(
-  "https://api.secstream.dev/v1/filings?ticker=AAPL&type=10-K",
+  "https://api.secstream.dev/v1/filings?ticker=AAPL&type=10-K&include=market",
   { headers: { Authorization: "Bearer ${display}" } }
 );
+// Returns filings with attached market reaction
 const filings = await res.json();
 console.log(filings);`;
 
