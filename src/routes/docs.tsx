@@ -235,31 +235,6 @@ function FilingsEndpoint() {
     </Section>
   );
 }
-        <CodeBlock
-          filename="Response"
-          code={`{
-  "data": [
-    {
-      "company": "Apple Inc.",
-      "ticker": "AAPL",
-      "filing_type": "10-K",
-      "filing_date": "2024-11-01",
-      "url": "https://www.sec.gov/Archives/...",
-      "sections": {
-        "business": "Apple Inc. designs...",
-        "risk_factors": "The Company's...",
-        "md_and_a": "Fiscal 2024..."
-      }
-    }
-  ],
-  "next_cursor": null
-}`}
-        />
-      </div>
-    </Section>
-  );
-}
-
 function CompanyEndpoint() {
   return (
     <Section id="company" title="GET /company">
