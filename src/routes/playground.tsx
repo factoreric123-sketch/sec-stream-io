@@ -200,6 +200,18 @@ function PlaygroundPage() {
                 <div className="flex items-center justify-between pt-1">
                   <p className="font-mono text-[11px] text-muted-foreground">
                     Auth: <span className="text-foreground">Bearer {keyDisplay}</span>
+                    {apiKey && LIVE_ENDPOINTS.has(endpoint) && (
+                      <button
+                        type="button"
+                        onClick={() => setUseLive((v) => !v)}
+                        className={`ml-3 rounded px-1.5 py-0.5 text-[10px] uppercase tracking-wider ${
+                          isLive ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"
+                        }`}
+                        title="Toggle live API vs mock"
+                      >
+                        {isLive ? "Live" : "Mock"}
+                      </button>
+                    )}
                   </p>
                   <Button onClick={onRun} disabled={running} size="sm" className="btn-glow">
                     {running ? (
