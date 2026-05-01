@@ -301,23 +301,30 @@ function Errors() {
   return (
     <Section id="errors" title="Errors">
       <p className="text-sm text-muted-foreground">
-        Errors return a non-2xx HTTP status with a JSON body containing a code and message.
+        Errors return a non-2xx HTTP status with a JSON body containing a structured{" "}
+        <code className="font-mono text-xs">code</code>, a human-readable{" "}
+        <code className="font-mono text-xs">message</code>, and optional{" "}
+        <code className="font-mono text-xs">details</code>. Every response includes an{" "}
+        <code className="font-mono text-xs">X-Request-Id</code> header — include it in support
+        requests.
       </p>
       <ParamTable
         rows={[
-          { name: "400", type: "bad_request", desc: "Missing or invalid parameter." },
+          { name: "400", type: "missing_param / invalid_param", desc: "Missing or malformed parameter. The details object identifies which one." },
           { name: "401", type: "unauthorized", desc: "Missing or invalid API key." },
+          { name: "403", type: "plan_inactive", desc: "Subscription is canceled or past due." },
           { name: "404", type: "not_found", desc: "Resource (ticker / filing) not found." },
-          { name: "429", type: "rate_limited", desc: "Too many requests. Back off and retry." },
-          { name: "500", type: "server_error", desc: "Something broke on our end." },
+          { name: "429", type: "rate_limited", desc: "Too many requests. Back off and retry after the Retry-After window." },
+          { name: "500", type: "internal_error", desc: "Something broke on our end. Retry with backoff." },
         ]}
       />
       <CodeBlock
         filename="Error response"
         code={`{
   "error": {
-    "code": "not_found",
-    "message": "No company found for ticker 'XXXX'."
+    "code": "missing_param",
+    "message": "Missing required parameter: ticker",
+    "details": { "param": "ticker" }
   }
 }`}
       />
@@ -329,15 +336,40 @@ function Limits() {
   return (
     <Section id="limits" title="Rate limits">
       <p className="text-sm text-muted-foreground">
-        100,000 requests per month included. Soft burst limit of 60 requests per second per key.
-        Limit headers are returned on every response.
+        Free accounts: <strong>60 requests per minute</strong>. Paid plans get higher limits —
+        contact us if you need a custom rate. The limit is enforced per API key over a rolling
+        60-second window. When exceeded you'll receive a <code className="font-mono text-xs">429</code>{" "}
+        response with a <code className="font-mono text-xs">Retry-After</code> header.
       </p>
       <CodeBlock
-        filename="Response headers"
+        filename="Response headers (sent on every request)"
         language="http"
-        code={`X-RateLimit-Limit: 100000
-X-RateLimit-Remaining: 99847
-X-RateLimit-Reset: 2025-12-01T00:00:00Z`}
+        code={`X-RateLimit-Limit: 60
+X-RateLimit-Remaining: 47
+X-RateLimit-Reset: 60
+X-Request-Id: 9f1c8b3e-7d0f-4c2a-b5e9-1a2b3c4d5e6f
+X-Response-Time-Ms: 38`}
+      />
+      <p className="text-sm text-muted-foreground">
+        <strong>Pagination.</strong> List endpoints (<code className="font-mono text-xs">/filings</code>,
+        {" "}<code className="font-mono text-xs">/insider</code>,{" "}
+        <code className="font-mono text-xs">/clusters</code>,{" "}
+        <code className="font-mono text-xs">/search</code>) return up to{" "}
+        <code className="font-mono text-xs">limit</code> rows (default 25, max 100) plus a{" "}
+        <code className="font-mono text-xs">pagination.next_cursor</code> string. Pass it back as
+        the <code className="font-mono text-xs">cursor</code> param to fetch the next page.
+      </p>
+      <CodeBlock
+        filename="Paginated response"
+        code={`{
+  "ticker": "AAPL",
+  "data": [ /* up to limit rows */ ],
+  "pagination": {
+    "next_cursor": "eyJmaWxlZF9hdCI6IjIwMjQtMDgtMDFUMDA6MDA6MDBaIiwi...",
+    "has_more": true,
+    "limit": 25
+  }
+}`}
       />
     </Section>
   );
