@@ -1,7 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Eye, EyeOff, Copy, Check, RefreshCw, LogOut, BookOpen, AlertTriangle, Play } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { CodeBlock } from "@/components/CodeBlock";
 
@@ -10,14 +11,14 @@ export const Route = createFileRoute("/dashboard")({
 });
 
 function DashboardPage() {
-  const { user, loading, logout, regenerateKey } = useAuth();
+  const { user, profile, apiKey, loading, logout, regenerateKey } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/login" });
   }, [loading, user, navigate]);
 
-  if (loading || !user) {
+  if (loading || !user || !profile) {
     return (
       <div className="grid min-h-screen place-items-center bg-background">
         <div className="font-mono text-xs text-muted-foreground animate-pulse-slow">
@@ -29,7 +30,7 @@ function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <DashboardHeader email={user.email} onLogout={() => { logout(); navigate({ to: "/" }); }} />
+      <DashboardHeader email={profile.email} onLogout={async () => { await logout(); navigate({ to: "/" }); }} />
       <main className="mx-auto max-w-6xl px-6 py-10">
         <div className="mb-8">
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
@@ -42,12 +43,16 @@ function DashboardPage() {
 
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-6">
-            <ApiKeyPanel apiKey={user.apiKey} onRegenerate={regenerateKey} />
-            <UsagePanel />
-            <QuickstartPanel apiKey={user.apiKey} />
+            {apiKey ? (
+              <ApiKeyPanel apiKey={apiKey.keyPlaintext} onRegenerate={regenerateKey} />
+            ) : (
+              <PendingKeyPanel onCreate={regenerateKey} />
+            )}
+            <UsagePanel userId={user.id} />
+            <QuickstartPanel apiKey={apiKey?.keyPlaintext ?? "sk_live_..."} />
           </div>
           <div className="space-y-6">
-            <AccountPanel plan={user.plan} renewalDate={user.renewalDate} email={user.email} />
+            <AccountPanel plan={profile.plan} renewalDate={profile.renewalDate} email={profile.email} />
             <DocsCard />
           </div>
         </div>
@@ -98,10 +103,11 @@ function Card({ title, description, action, children }: {
   );
 }
 
-function ApiKeyPanel({ apiKey, onRegenerate }: { apiKey: string; onRegenerate: () => void }) {
+function ApiKeyPanel({ apiKey, onRegenerate }: { apiKey: string; onRegenerate: () => Promise<void> }) {
   const [visible, setVisible] = useState(false);
   const [copied, setCopied] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  const [rotating, setRotating] = useState(false);
 
   const masked = apiKey.slice(0, 11) + "•".repeat(20) + apiKey.slice(-4);
 
@@ -109,6 +115,16 @@ function ApiKeyPanel({ apiKey, onRegenerate }: { apiKey: string; onRegenerate: (
     await navigator.clipboard.writeText(apiKey);
     setCopied(true);
     setTimeout(() => setCopied(false), 1400);
+  };
+
+  const handleRegenerate = async () => {
+    setRotating(true);
+    try {
+      await onRegenerate();
+      setConfirming(false);
+    } finally {
+      setRotating(false);
+    }
   };
 
   return (
@@ -141,13 +157,9 @@ function ApiKeyPanel({ apiKey, onRegenerate }: { apiKey: string; onRegenerate: (
         </div>
         {confirming ? (
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => setConfirming(false)}>Cancel</Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => { onRegenerate(); setConfirming(false); }}
-            >
-              Confirm
+            <Button variant="outline" size="sm" onClick={() => setConfirming(false)} disabled={rotating}>Cancel</Button>
+            <Button variant="destructive" size="sm" onClick={handleRegenerate} disabled={rotating}>
+              {rotating ? "Rotating…" : "Confirm"}
             </Button>
           </div>
         ) : (
@@ -160,21 +172,55 @@ function ApiKeyPanel({ apiKey, onRegenerate }: { apiKey: string; onRegenerate: (
   );
 }
 
-function UsagePanel() {
-  // Mocked usage data — deterministic so chart doesn't jump per render
-  const data = useMemo(() => {
-    const seed = 7;
-    return Array.from({ length: 30 }, (_, i) => {
-      const x = Math.sin(i * 1.3 + seed) * 0.5 + 0.5;
-      return Math.round(120 + x * 480 + (i / 29) * 200);
-    });
-  }, []);
-  const max = Math.max(...data);
+function PendingKeyPanel({ onCreate }: { onCreate: () => Promise<void> }) {
+  const [creating, setCreating] = useState(false);
+  return (
+    <Card title="API Key" description="No active key — create one to start.">
+      <Button
+        size="sm"
+        disabled={creating}
+        onClick={async () => { setCreating(true); try { await onCreate(); } finally { setCreating(false); } }}
+      >
+        {creating ? "Generating…" : "Generate API key"}
+      </Button>
+    </Card>
+  );
+}
+
+function UsagePanel({ userId }: { userId: string }) {
+  const [data, setData] = useState<number[]>(Array(30).fill(0));
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const since = new Date(Date.now() - 30 * 86_400_000).toISOString();
+      const { data: rows } = await supabase
+        .from("usage_logs")
+        .select("created_at")
+        .eq("user_id", userId)
+        .gte("created_at", since);
+      if (!alive) return;
+      const buckets = Array(30).fill(0);
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      (rows ?? []).forEach((r: { created_at: string }) => {
+        const d = new Date(r.created_at); d.setHours(0, 0, 0, 0);
+        const diff = Math.round((today.getTime() - d.getTime()) / 86_400_000);
+        const idx = 29 - diff;
+        if (idx >= 0 && idx < 30) buckets[idx]++;
+      });
+      setData(buckets);
+      setLoading(false);
+    })();
+    return () => { alive = false; };
+  }, [userId]);
+
+  const max = Math.max(...data, 1);
   const today = data[data.length - 1];
   const month = data.reduce((a, b) => a + b, 0);
 
   return (
-    <Card title="Usage" description="Last 30 days">
+    <Card title="Usage" description="Last 30 days · live from your account">
       <div className="grid grid-cols-3 gap-6 border-b border-border/60 pb-5">
         <Stat label="Today" value={today.toLocaleString()} />
         <Stat label="This month" value={month.toLocaleString()} />
@@ -184,16 +230,23 @@ function UsagePanel() {
         {data.map((v, i) => (
           <div
             key={i}
-            className="flex-1 rounded-t bg-primary/30 transition-all hover:bg-primary"
-            style={{ height: `${(v / max) * 100}%` }}
+            className={`flex-1 rounded-t transition-all ${v > 0 ? "bg-primary/40 hover:bg-primary" : "bg-border/40"}`}
+            style={{ height: `${Math.max((v / max) * 100, 4)}%` }}
             title={`${v.toLocaleString()} requests`}
           />
         ))}
       </div>
       <div className="mt-2 flex justify-between font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
         <span>30d ago</span>
-        <span>today</span>
+        <span>{loading ? "…" : "today"}</span>
       </div>
+      {month === 0 && !loading && (
+        <p className="mt-4 text-xs text-muted-foreground">
+          No requests yet. Try the{" "}
+          <Link to="/playground" className="text-primary hover:underline">Playground</Link>{" "}
+          to generate some traffic.
+        </p>
+      )}
     </Card>
   );
 }
