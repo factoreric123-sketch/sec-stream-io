@@ -1,5 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { handlePublicApi, requireParam } from "@/server/apiAuth.server";
+import {
+  apiError,
+  handlePublicApi,
+  parseLimit,
+  requireParam,
+} from "@/server/apiAuth.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 export const Route = createFileRoute("/api/public/v1/fundamentals")({
@@ -8,8 +13,12 @@ export const Route = createFileRoute("/api/public/v1/fundamentals")({
       GET: async ({ request }) =>
         handlePublicApi(request, "/v1/fundamentals", async ({ url }) => {
           const ticker = requireParam(url, "ticker");
-          if (!ticker) return { ok: false, status: 400, error: "missing required param: ticker" };
-          const periods = Math.min(Number(url.searchParams.get("periods")) || 4, 20);
+          if (!ticker)
+            return apiError("missing_param", "Missing required parameter: ticker", 400, {
+              param: "ticker",
+            });
+          // Reuse limit semantics for "periods" (default 4, max 20 historical periods).
+          const periods = Math.min(parseLimit(url, 4, 20), 20);
 
           const { data, error } = await supabaseAdmin
             .from("sec_filings")
@@ -22,14 +31,14 @@ export const Route = createFileRoute("/api/public/v1/fundamentals")({
             .order("period_of_report", { ascending: false })
             .limit(periods);
 
-          if (error) return { ok: false, status: 500, error: error.message };
+          if (error) return apiError("internal_error", error.message, 500);
 
           return {
             ok: true,
             data: {
               ticker: ticker.toUpperCase(),
-              count: (data ?? []).length,
-              periods: data ?? [],
+              data: data ?? [],
+              pagination: { next_cursor: null, has_more: false, limit: periods },
             },
           };
         }),

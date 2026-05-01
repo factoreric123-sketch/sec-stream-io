@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { handlePublicApi, requireParam } from "@/server/apiAuth.server";
+import { apiError, handlePublicApi, requireParam } from "@/server/apiAuth.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 export const Route = createFileRoute("/api/public/v1/company")({
@@ -8,7 +8,10 @@ export const Route = createFileRoute("/api/public/v1/company")({
       GET: async ({ request }) =>
         handlePublicApi(request, "/v1/company", async ({ url }) => {
           const ticker = requireParam(url, "ticker");
-          if (!ticker) return { ok: false, status: 400, error: "missing required param: ticker" };
+          if (!ticker)
+            return apiError("missing_param", "Missing required parameter: ticker", 400, {
+              param: "ticker",
+            });
 
           const { data, error } = await supabaseAdmin
             .from("sec_filings")
@@ -18,8 +21,9 @@ export const Route = createFileRoute("/api/public/v1/company")({
             .limit(1)
             .maybeSingle();
 
-          if (error) return { ok: false, status: 500, error: error.message };
-          if (!data) return { ok: false, status: 404, error: "company not found" };
+          if (error) return apiError("internal_error", error.message, 500);
+          if (!data)
+            return apiError("not_found", `No company found for ticker ${ticker.toUpperCase()}`, 404);
 
           return {
             ok: true,

@@ -23,11 +23,16 @@ type AuthContextValue = {
   session: Session | null;
   user: SupabaseUser | null;
   profile: Profile | null;
+  apiKeys: ApiKey[];
+  /** First (most recent) key, or null. Convenience for quickstart UI. */
   apiKey: ApiKey | null;
   loading: boolean;
   signup: (email: string, password: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  createKey: (label?: string) => Promise<ApiKey>;
+  revokeKey: (id: string) => Promise<void>;
+  /** Legacy: replaces the single first key. Kept for backwards compatibility. */
   regenerateKey: () => Promise<void>;
   refresh: () => Promise<void>;
 };
@@ -50,7 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [apiKey, setApiKey] = useState<ApiKey | null>(null);
+  const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadUserData = useCallback(async (uid: string) => {
@@ -60,8 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .from("api_keys")
         .select("*")
         .eq("user_id", uid)
-        .order("created_at", { ascending: false })
-        .limit(1),
+        .order("created_at", { ascending: false }),
     ]);
 
     if (prof) {
@@ -72,9 +76,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         renewalDate: prof.renewal_date,
       });
     }
-    const k = keys?.[0];
-    if (k) {
-      setApiKey({
+    setApiKeys(
+      (keys ?? []).map((k) => ({
         id: k.id,
         keyPlaintext: k.key_plaintext,
         keyPrefix: k.key_prefix,
@@ -82,23 +85,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         label: k.label,
         lastUsedAt: k.last_used_at,
         createdAt: k.created_at,
-      });
-    } else {
-      setApiKey(null);
-    }
+      }))
+    );
   }, []);
 
   useEffect(() => {
-    // Listener FIRST, then session check (Supabase recommendation)
     const { data: sub } = supabase.auth.onAuthStateChange((_event, sess) => {
       setSession(sess);
       setUser(sess?.user ?? null);
       if (sess?.user) {
-        // Defer to avoid deadlock per Supabase docs
         setTimeout(() => loadUserData(sess.user.id), 0);
       } else {
         setProfile(null);
-        setApiKey(null);
+        setApiKeys([]);
       }
     });
 
@@ -130,43 +129,76 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
   }, []);
 
+  const createKey = useCallback(
+    async (label?: string): Promise<ApiKey> => {
+      if (!user) throw new Error("Not signed in");
+      const newKey = generateApiKey();
+      const hash = await sha256Hex(newKey);
+      const { data, error } = await supabase
+        .from("api_keys")
+        .insert({
+          user_id: user.id,
+          key_plaintext: newKey,
+          key_hash: hash,
+          key_prefix: newKey.slice(0, 11),
+          key_last4: newKey.slice(-4),
+          label: label?.trim() || "Default",
+        })
+        .select()
+        .single();
+      if (error) throw error;
+      const created: ApiKey = {
+        id: data.id,
+        keyPlaintext: data.key_plaintext,
+        keyPrefix: data.key_prefix,
+        keyLast4: data.key_last4,
+        label: data.label,
+        lastUsedAt: data.last_used_at,
+        createdAt: data.created_at,
+      };
+      setApiKeys((prev) => [created, ...prev]);
+      return created;
+    },
+    [user]
+  );
+
+  const revokeKey = useCallback(async (id: string) => {
+    const { error } = await supabase.from("api_keys").delete().eq("id", id);
+    if (error) throw error;
+    setApiKeys((prev) => prev.filter((k) => k.id !== id));
+  }, []);
+
   const regenerateKey = useCallback(async () => {
     if (!user) throw new Error("Not signed in");
-    const newKey = generateApiKey();
-    const hash = await sha256Hex(newKey);
-    // Delete existing keys, insert new one (simple single-key model for now)
+    // Legacy single-key flow: delete all then create one.
     await supabase.from("api_keys").delete().eq("user_id", user.id);
-    const { data, error } = await supabase
-      .from("api_keys")
-      .insert({
-        user_id: user.id,
-        key_plaintext: newKey,
-        key_hash: hash,
-        key_prefix: newKey.slice(0, 11),
-        key_last4: newKey.slice(-4),
-        label: "Default",
-      })
-      .select()
-      .single();
-    if (error) throw error;
-    setApiKey({
-      id: data.id,
-      keyPlaintext: data.key_plaintext,
-      keyPrefix: data.key_prefix,
-      keyLast4: data.key_last4,
-      label: data.label,
-      lastUsedAt: data.last_used_at,
-      createdAt: data.created_at,
-    });
-  }, [user]);
+    setApiKeys([]);
+    await createKey("Default");
+  }, [user, createKey]);
 
   const refresh = useCallback(async () => {
     if (user) await loadUserData(user.id);
   }, [user, loadUserData]);
 
+  const apiKey = apiKeys[0] ?? null;
+
   return (
     <AuthContext.Provider
-      value={{ session, user, profile, apiKey, loading, signup, login, logout, regenerateKey, refresh }}
+      value={{
+        session,
+        user,
+        profile,
+        apiKey,
+        apiKeys,
+        loading,
+        signup,
+        login,
+        logout,
+        createKey,
+        revokeKey,
+        regenerateKey,
+        refresh,
+      }}
     >
       {children}
     </AuthContext.Provider>

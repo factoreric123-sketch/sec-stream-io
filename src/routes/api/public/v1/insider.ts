@@ -1,5 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { handlePublicApi, requireParam } from "@/server/apiAuth.server";
+import {
+  apiError,
+  decodeCursor,
+  encodeCursor,
+  handlePublicApi,
+  parseLimit,
+  requireParam,
+} from "@/server/apiAuth.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 export const Route = createFileRoute("/api/public/v1/insider")({
@@ -8,27 +15,48 @@ export const Route = createFileRoute("/api/public/v1/insider")({
       GET: async ({ request }) =>
         handlePublicApi(request, "/v1/insider", async ({ url }) => {
           const ticker = requireParam(url, "ticker");
-          if (!ticker) return { ok: false, status: 400, error: "missing required param: ticker" };
-          const limit = Math.min(Number(url.searchParams.get("limit")) || 25, 100);
+          if (!ticker)
+            return apiError("missing_param", "Missing required parameter: ticker", 400, {
+              param: "ticker",
+            });
+          const limit = parseLimit(url, 25, 100);
+          const cursor = decodeCursor(url);
 
-          const { data, error } = await supabaseAdmin
+          let q = supabaseAdmin
             .from("sec_filings")
             .select(
               "accession_no,filed_at,transaction_date,ticker,company_name,insider_name,insider_title,transaction_code,security_title,is_derivative,transaction_shares,price_per_share,shares_owned_before,shares_owned_after,total_value,delta_ownership,cluster_count"
             )
             .eq("ticker", ticker.toUpperCase())
             .eq("form_type", "4")
-            .order("transaction_date", { ascending: false, nullsFirst: false })
-            .limit(limit);
+            .order("filed_at", { ascending: false, nullsFirst: false })
+            .order("accession_no", { ascending: false })
+            .limit(limit + 1);
 
-          if (error) return { ok: false, status: 500, error: error.message };
+          if (cursor) {
+            q = q.or(
+              `filed_at.lt.${cursor.filed_at},and(filed_at.eq.${cursor.filed_at},accession_no.lt.${cursor.accession_no})`
+            );
+          }
+
+          const { data, error } = await q;
+          if (error) return apiError("internal_error", error.message, 500);
+
+          const rows = data ?? [];
+          const hasMore = rows.length > limit;
+          const page = hasMore ? rows.slice(0, limit) : rows;
+          const last = page[page.length - 1];
+          const nextCursor =
+            hasMore && last?.filed_at && last?.accession_no
+              ? encodeCursor({ filed_at: last.filed_at, accession_no: last.accession_no })
+              : null;
 
           return {
             ok: true,
             data: {
               ticker: ticker.toUpperCase(),
-              count: (data ?? []).length,
-              transactions: data ?? [],
+              data: page,
+              pagination: { next_cursor: nextCursor, has_more: hasMore, limit },
             },
           };
         }),

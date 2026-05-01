@@ -1,5 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { handlePublicApi, requireParam } from "@/server/apiAuth.server";
+import {
+  apiError,
+  handlePublicApi,
+  parseLimit,
+  requireParam,
+} from "@/server/apiAuth.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 export const Route = createFileRoute("/api/public/v1/search")({
@@ -8,8 +13,11 @@ export const Route = createFileRoute("/api/public/v1/search")({
       GET: async ({ request }) =>
         handlePublicApi(request, "/v1/search", async ({ url }) => {
           const q = requireParam(url, "q");
-          if (!q) return { ok: false, status: 400, error: "missing required param: q" };
-          const limit = Math.min(Number(url.searchParams.get("limit")) || 10, 50);
+          if (!q)
+            return apiError("missing_param", "Missing required parameter: q", 400, {
+              param: "q",
+            });
+          const limit = parseLimit(url, 10, 50);
 
           const pattern = `%${q}%`;
           const { data, error } = await supabaseAdmin
@@ -18,7 +26,7 @@ export const Route = createFileRoute("/api/public/v1/search")({
             .or(`ticker.ilike.${pattern},company_name.ilike.${pattern}`)
             .limit(limit * 4); // fetch extra for dedup
 
-          if (error) return { ok: false, status: 500, error: error.message };
+          if (error) return apiError("internal_error", error.message, 500);
 
           const seen = new Set<string>();
           const results: Array<{
@@ -42,7 +50,14 @@ export const Route = createFileRoute("/api/public/v1/search")({
             if (results.length >= limit) break;
           }
 
-          return { ok: true, data: { query: q, count: results.length, results } };
+          return {
+            ok: true,
+            data: {
+              query: q,
+              data: results,
+              pagination: { next_cursor: null, has_more: false, limit },
+            },
+          };
         }),
     },
   },
