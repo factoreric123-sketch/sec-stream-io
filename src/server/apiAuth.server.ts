@@ -234,7 +234,8 @@ function buildErrorBody(
 export async function handlePublicApi<T>(
   request: Request,
   endpoint: string,
-  fn: (ctx: { auth: AuthedKey; url: URL }) => Promise<ApiResult<T>>
+  fn: (ctx: { auth: AuthedKey; url: URL }) => Promise<ApiResult<T>>,
+  options: { requiredScope?: string } = { requiredScope: "read" }
 ): Promise<Response> {
   const start = Date.now();
   const requestId = randomUUID();
@@ -271,6 +272,22 @@ export async function handlePublicApi<T>(
       ...baseHeaders,
       "X-Response-Time-Ms": String(latency),
     });
+  }
+
+  // 2b. Scope enforcement
+  const requiredScope = options.requiredScope ?? "read";
+  if (requiredScope && !auth.scopes.includes(requiredScope)) {
+    const latency = Date.now() - start;
+    await logUsage(auth, endpoint, 403, latency);
+    return jsonResponse(
+      buildErrorBody(
+        "forbidden",
+        `This API key is missing the required scope: ${requiredScope}`,
+        { required_scope: requiredScope, key_scopes: auth.scopes }
+      ),
+      403,
+      { ...baseHeaders, "X-Response-Time-Ms": String(latency) }
+    );
   }
 
   // 3. Rate limit (best-effort: counts usage_logs in the last 60s).
