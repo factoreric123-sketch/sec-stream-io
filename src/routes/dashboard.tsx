@@ -10,14 +10,14 @@ export const Route = createFileRoute("/dashboard")({
 });
 
 function DashboardPage() {
-  const { user, loading, logout, regenerateKey } = useAuth();
+  const { user, profile, apiKey, loading, logout, regenerateKey } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/login" });
   }, [loading, user, navigate]);
 
-  if (loading || !user) {
+  if (loading || !user || !profile) {
     return (
       <div className="grid min-h-screen place-items-center bg-background">
         <div className="font-mono text-xs text-muted-foreground animate-pulse-slow">
@@ -29,7 +29,7 @@ function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <DashboardHeader email={user.email} onLogout={() => { logout(); navigate({ to: "/" }); }} />
+      <DashboardHeader email={profile.email} onLogout={async () => { await logout(); navigate({ to: "/" }); }} />
       <main className="mx-auto max-w-6xl px-6 py-10">
         <div className="mb-8">
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
@@ -42,12 +42,16 @@ function DashboardPage() {
 
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-6">
-            <ApiKeyPanel apiKey={user.apiKey} onRegenerate={regenerateKey} />
-            <UsagePanel />
-            <QuickstartPanel apiKey={user.apiKey} />
+            {apiKey ? (
+              <ApiKeyPanel apiKey={apiKey.keyPlaintext} onRegenerate={regenerateKey} />
+            ) : (
+              <PendingKeyPanel onCreate={regenerateKey} />
+            )}
+            <UsagePanel userId={user.id} />
+            <QuickstartPanel apiKey={apiKey?.keyPlaintext ?? "sk_live_..."} />
           </div>
           <div className="space-y-6">
-            <AccountPanel plan={user.plan} renewalDate={user.renewalDate} email={user.email} />
+            <AccountPanel plan={profile.plan} renewalDate={profile.renewalDate} email={profile.email} />
             <DocsCard />
           </div>
         </div>
