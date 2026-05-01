@@ -17,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { CodeBlock } from "@/components/CodeBlock";
 import { WebhooksPanel } from "@/components/WebhooksPanel";
+import { OnboardingWizard } from "@/components/OnboardingWizard";
 import { isAdmin } from "@/lib/admin";
 
 export const Route = createFileRoute("/dashboard")({
@@ -56,6 +57,7 @@ function DashboardPage() {
 
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-6">
+            <OnboardingWizard apiKey={apiKey?.keyPlaintext ?? null} userId={user.id} />
             <ApiKeysPanel
               apiKeys={apiKeys}
               onCreate={createKey}
