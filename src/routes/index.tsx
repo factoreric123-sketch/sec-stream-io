@@ -292,8 +292,11 @@ function LandingPage() {
           <div className="flex items-center gap-2 font-mono">
             <span className="text-primary">§</span> SECStream
           </div>
-          <div className="flex items-center gap-6">
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
             <Link to="/docs" className="hover:text-foreground">Docs</Link>
+            <Link to="/playground" className="hover:text-foreground">Playground</Link>
+            <Link to="/changelog" className="hover:text-foreground">Changelog</Link>
+            <Link to="/status" className="hover:text-foreground">Status</Link>
             <Link to="/login" className="hover:text-foreground">Log in</Link>
             <span>© {new Date().getFullYear()}</span>
           </div>
