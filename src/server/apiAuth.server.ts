@@ -322,7 +322,12 @@ export async function handlePublicApi<T>(
     "X-Response-Time-Ms": String(latency),
   };
 
-  if (result.ok) return jsonResponse(result.data, status, responseHeaders);
+  if (result.ok) {
+    if (result.csv && wantsCsv(request, new URL(request.url))) {
+      return csvResponse(toCsv(result.csv.rows), result.csv.filename, responseHeaders);
+    }
+    return jsonResponse(result.data, status, responseHeaders);
+  }
   return jsonResponse(
     buildErrorBody(result.code, result.message, result.details),
     status,
