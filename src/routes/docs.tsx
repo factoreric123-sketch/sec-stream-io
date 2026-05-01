@@ -342,3 +342,93 @@ X-RateLimit-Reset: 2025-12-01T00:00:00Z`}
     </Section>
   );
 }
+
+function QuoteEndpoint() {
+  return (
+    <Section id="quote" title="GET /quote">
+      <p className="text-sm text-muted-foreground">
+        Live quote for a ticker. Last price, bid/ask, day change, and volume.
+      </p>
+      <Endpoint method="GET" path="/v1/quote" />
+      <ParamTable
+        rows={[
+          { name: "ticker", type: "string", required: true, desc: "Stock ticker symbol." },
+        ]}
+      />
+      <CodeBlock
+        filename="Response"
+        code={`{
+  "ticker": "AAPL",
+  "price": 229.87,
+  "bid": 229.85,
+  "ask": 229.88,
+  "day_change": 1.42,
+  "day_change_pct": 0.62,
+  "volume": 48211900,
+  "as_of": "2025-05-01T19:59:58Z"
+}`}
+      />
+    </Section>
+  );
+}
+
+function BarsEndpoint() {
+  return (
+    <Section id="bars" title="GET /bars">
+      <p className="text-sm text-muted-foreground">
+        Historical OHLCV bars. Use for charts, backtests, or correlating filings to price action.
+      </p>
+      <Endpoint method="GET" path="/v1/bars" />
+      <ParamTable
+        rows={[
+          { name: "ticker", type: "string", required: true, desc: "Stock ticker symbol." },
+          { name: "timeframe", type: "string", required: true, desc: "1m, 5m, 1h, 1d, 1w, 1mo." },
+          { name: "from", type: "ISO date", desc: "Start of range (inclusive)." },
+          { name: "to", type: "ISO date", desc: "End of range (inclusive)." },
+          { name: "limit", type: "integer", desc: "Max bars (default 500, max 5000)." },
+        ]}
+      />
+      <CodeBlock
+        filename="Response"
+        code={`{
+  "ticker": "AAPL",
+  "timeframe": "1d",
+  "data": [
+    { "t": "2025-04-28", "o": 224.10, "h": 227.03, "l": 223.81, "c": 226.40, "v": 41880200 },
+    { "t": "2025-04-29", "o": 226.55, "h": 229.99, "l": 225.92, "c": 229.87, "v": 48211900 }
+  ]
+}`}
+      />
+    </Section>
+  );
+}
+
+function FundamentalsEndpoint() {
+  return (
+    <Section id="fundamentals" title="GET /fundamentals">
+      <p className="text-sm text-muted-foreground">
+        Live fundamentals derived from latest filings + current price: market cap, P/E, EPS, sector.
+      </p>
+      <Endpoint method="GET" path="/v1/fundamentals" />
+      <ParamTable
+        rows={[
+          { name: "ticker", type: "string", required: true, desc: "Stock ticker symbol." },
+        ]}
+      />
+      <CodeBlock
+        filename="Response"
+        code={`{
+  "ticker": "AAPL",
+  "market_cap": 3480000000000,
+  "pe_ratio": 35.4,
+  "eps_ttm": 6.49,
+  "dividend_yield": 0.0044,
+  "shares_outstanding": 15140000000,
+  "sector": "Technology",
+  "industry": "Consumer Electronics",
+  "latest_filing": { "type": "10-K", "date": "2024-11-01" }
+}`}
+      />
+    </Section>
+  );
+}
