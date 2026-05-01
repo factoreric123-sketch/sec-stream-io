@@ -5,6 +5,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { CodeBlock } from "@/components/CodeBlock";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
 import {
   mockResponse,
   ENDPOINT_PARAMS,
@@ -32,7 +33,7 @@ const ENDPOINTS: { id: Endpoint; group: string }[] = [
 ];
 
 function PlaygroundPage() {
-  const { user } = useAuth();
+  const { user, apiKey } = useAuth();
   const [endpoint, setEndpoint] = useState<Endpoint>("/filings");
   const [params, setParams] = useState<Record<string, string>>({
     ticker: "AAPL",
@@ -51,18 +52,32 @@ function PlaygroundPage() {
     return usable ? `?${usable}` : "";
   }, [params, paramDefs]);
 
-  const keyDisplay = user ? user.apiKey.slice(0, 14) + "..." : "sk_live_demo_...";
+  const keyDisplay = apiKey ? apiKey.keyPlaintext.slice(0, 14) + "..." : "sk_live_demo_...";
 
   const curl = `curl https://api.secstream.dev/v1${endpoint}${queryString} \\
   -H "Authorization: Bearer ${keyDisplay}"`;
 
   const onRun = () => {
     setRunning(true);
-    // Simulate network latency for realism
     const result = mockResponse({ endpoint, params });
-    window.setTimeout(() => {
+    window.setTimeout(async () => {
       setResponse(result);
       setRunning(false);
+      // Log to Supabase if signed in
+      if (user) {
+        await supabase.from("usage_logs").insert({
+          user_id: user.id,
+          endpoint,
+          status: result.status,
+          latency_ms: result.latencyMs,
+        });
+        if (apiKey) {
+          await supabase
+            .from("api_keys")
+            .update({ last_used_at: new Date().toISOString() })
+            .eq("id", apiKey.id);
+        }
+      }
     }, 320);
   };
 
