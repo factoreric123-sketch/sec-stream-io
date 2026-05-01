@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Eye, EyeOff, Copy, Check, RefreshCw, LogOut, BookOpen, AlertTriangle } from "lucide-react";
+import { Eye, EyeOff, Copy, Check, RefreshCw, LogOut, BookOpen, AlertTriangle, Play } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { CodeBlock } from "@/components/CodeBlock";
@@ -66,6 +66,9 @@ function DashboardHeader({ email, onLogout }: { email: string; onLogout: () => v
         </Link>
         <div className="flex items-center gap-3">
           <span className="hidden font-mono text-xs text-muted-foreground sm:inline">{email}</span>
+          <Button asChild variant="ghost" size="sm">
+            <Link to="/playground"><Play /> Playground</Link>
+          </Button>
           <Button asChild variant="ghost" size="sm">
             <Link to="/docs"><BookOpen /> Docs</Link>
           </Button>
