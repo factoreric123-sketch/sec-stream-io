@@ -75,7 +75,7 @@ function DashboardPage() {
   );
 }
 
-function DashboardHeader({ email, onLogout }: { email: string; onLogout: () => void }) {
+function DashboardHeader({ email, onLogout, showAdmin }: { email: string; onLogout: () => void; showAdmin?: boolean }) {
   return (
     <header className="border-b border-border/60 bg-background/70 backdrop-blur-xl">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-6">
@@ -85,6 +85,11 @@ function DashboardHeader({ email, onLogout }: { email: string; onLogout: () => v
         </Link>
         <div className="flex items-center gap-3">
           <span className="hidden font-mono text-xs text-muted-foreground sm:inline">{email}</span>
+          {showAdmin && (
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/admin">Admin</Link>
+            </Button>
+          )}
           <Button asChild variant="ghost" size="sm">
             <Link to="/playground"><Play /> Playground</Link>
           </Button>
