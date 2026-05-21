@@ -132,7 +132,7 @@ function TickerPage() {
               <Empty>No filings indexed.</Empty>
             ) : (
               <ul className="divide-y divide-border/60">
-                {filings.map((f) => (
+                {filings.map((f: typeof filings[number]) => (
                   <li key={f.accession_number} className="flex items-center justify-between py-2 text-sm">
                     <div>
                       <span className="font-mono text-xs text-primary">{f.form_type}</span>
@@ -152,7 +152,7 @@ function TickerPage() {
               <Empty>No insider trades.</Empty>
             ) : (
               <ul className="divide-y divide-border/60">
-                {insider.map((i) => (
+                {insider.map((i: typeof insider[number]) => (
                   <li key={i.accession} className="py-2 text-sm">
                     <div className="flex items-center justify-between">
                       <span className="truncate font-medium">{i.reporting_owner_name ?? "—"}</span>

@@ -65,7 +65,7 @@ export const Route = createFileRoute("/api/public/v1/_internal/dispatch-webhooks
                 webhook_id: string;
                 user_id: string;
                 event: string;
-                payload: unknown;
+                payload: Record<string, unknown>;
               }> = [];
               for (const filing of newFilings) {
                 if (!filing.ticker) continue;
