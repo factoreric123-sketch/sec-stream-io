@@ -87,7 +87,8 @@ export const Route = createFileRoute("/api/public/v1/_internal/dispatch-webhooks
               }
 
               if (toInsert.length > 0) {
-                await supabaseAdmin.from("webhook_deliveries").insert(toInsert);
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                await supabaseAdmin.from("webhook_deliveries").insert(toInsert as any);
                 result.enqueued = toInsert.length;
               }
             }
