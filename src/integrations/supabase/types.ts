@@ -16,309 +16,364 @@ export type Database = {
     Tables: {
       api_keys: {
         Row: {
-          created_at: string
-          id: string
-          key_hash: string
-          key_last4: string
-          key_plaintext: string
-          key_prefix: string
-          label: string
-          last_used_at: string | null
-          scopes: string[]
-          user_id: string
+          calls_this_month: number | null
+          created_at: string | null
+          customer_email: string | null
+          customer_name: string
+          id: number
+          is_active: boolean | null
+          key: string
+          last_reset_date: string | null
+          monthly_limit: number | null
         }
         Insert: {
-          created_at?: string
-          id?: string
-          key_hash: string
-          key_last4: string
-          key_plaintext: string
-          key_prefix: string
-          label?: string
-          last_used_at?: string | null
-          scopes?: string[]
-          user_id: string
+          calls_this_month?: number | null
+          created_at?: string | null
+          customer_email?: string | null
+          customer_name: string
+          id?: number
+          is_active?: boolean | null
+          key: string
+          last_reset_date?: string | null
+          monthly_limit?: number | null
         }
         Update: {
-          created_at?: string
-          id?: string
-          key_hash?: string
-          key_last4?: string
-          key_plaintext?: string
-          key_prefix?: string
-          label?: string
-          last_used_at?: string | null
-          scopes?: string[]
-          user_id?: string
+          calls_this_month?: number | null
+          created_at?: string | null
+          customer_email?: string | null
+          customer_name?: string
+          id?: number
+          is_active?: boolean | null
+          key?: string
+          last_reset_date?: string | null
+          monthly_limit?: number | null
         }
         Relationships: []
       }
-      profiles: {
+      bot_scan_state: {
         Row: {
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value?: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
+      filings: {
+        Row: {
+          accession: string
+          created_at: string | null
+          filed_at: string
+          id: number
+          insider_name: string | null
+          is_10b5: boolean | null
+          ticker: string
+          title: string | null
+          value: number | null
+        }
+        Insert: {
+          accession: string
+          created_at?: string | null
+          filed_at: string
+          id?: number
+          insider_name?: string | null
+          is_10b5?: boolean | null
+          ticker: string
+          title?: string | null
+          value?: number | null
+        }
+        Update: {
+          accession?: string
+          created_at?: string | null
+          filed_at?: string
+          id?: number
+          insider_name?: string | null
+          is_10b5?: boolean | null
+          ticker?: string
+          title?: string | null
+          value?: number | null
+        }
+        Relationships: []
+      }
+      insider_form4_filings: {
+        Row: {
+          accession: string
+          cik: string | null
           created_at: string
-          email: string
-          id: string
-          plan: string
-          rate_limit_per_min: number
-          renewal_date: string
+          filed_at: string
+          filing_filename: string | null
+          filing_href: string | null
+          id: number
+          is_10b5: boolean | null
+          is_director: boolean | null
+          is_officer: boolean | null
+          is_ten_percent_owner: boolean | null
+          issuer_name: string | null
+          price_per_share: number | null
+          raw_json: Json | null
+          raw_xml: string | null
+          reporting_owner_name: string | null
+          reporting_owner_title: string | null
+          sec_updated_at: string | null
+          shares: number | null
+          ticker: string
+          transaction_code: string | null
+          transaction_value: number
           updated_at: string
         }
         Insert: {
+          accession: string
+          cik?: string | null
           created_at?: string
-          email: string
-          id: string
-          plan?: string
-          rate_limit_per_min?: number
-          renewal_date?: string
+          filed_at: string
+          filing_filename?: string | null
+          filing_href?: string | null
+          id?: never
+          is_10b5?: boolean | null
+          is_director?: boolean | null
+          is_officer?: boolean | null
+          is_ten_percent_owner?: boolean | null
+          issuer_name?: string | null
+          price_per_share?: number | null
+          raw_json?: Json | null
+          raw_xml?: string | null
+          reporting_owner_name?: string | null
+          reporting_owner_title?: string | null
+          sec_updated_at?: string | null
+          shares?: number | null
+          ticker: string
+          transaction_code?: string | null
+          transaction_value: number
           updated_at?: string
         }
         Update: {
+          accession?: string
+          cik?: string | null
           created_at?: string
-          email?: string
-          id?: string
-          plan?: string
-          rate_limit_per_min?: number
-          renewal_date?: string
+          filed_at?: string
+          filing_filename?: string | null
+          filing_href?: string | null
+          id?: never
+          is_10b5?: boolean | null
+          is_director?: boolean | null
+          is_officer?: boolean | null
+          is_ten_percent_owner?: boolean | null
+          issuer_name?: string | null
+          price_per_share?: number | null
+          raw_json?: Json | null
+          raw_xml?: string | null
+          reporting_owner_name?: string | null
+          reporting_owner_title?: string | null
+          sec_updated_at?: string | null
+          shares?: number | null
+          ticker?: string
+          transaction_code?: string | null
+          transaction_value?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      positions: {
+        Row: {
+          cluster: boolean | null
+          cluster_size: number | null
+          created_at: string | null
+          entry_date: string | null
+          entry_price: number | null
+          exit_date: string | null
+          exit_price: number | null
+          exit_reason: string | null
+          hold_days: number | null
+          id: number
+          kelly: number | null
+          return_pct: number | null
+          score: number | null
+          status: string | null
+          ticker: string
+          total_value: number | null
+        }
+        Insert: {
+          cluster?: boolean | null
+          cluster_size?: number | null
+          created_at?: string | null
+          entry_date?: string | null
+          entry_price?: number | null
+          exit_date?: string | null
+          exit_price?: number | null
+          exit_reason?: string | null
+          hold_days?: number | null
+          id?: number
+          kelly?: number | null
+          return_pct?: number | null
+          score?: number | null
+          status?: string | null
+          ticker: string
+          total_value?: number | null
+        }
+        Update: {
+          cluster?: boolean | null
+          cluster_size?: number | null
+          created_at?: string | null
+          entry_date?: string | null
+          entry_price?: number | null
+          exit_date?: string | null
+          exit_price?: number | null
+          exit_reason?: string | null
+          hold_days?: number | null
+          id?: number
+          kelly?: number | null
+          return_pct?: number | null
+          score?: number | null
+          status?: string | null
+          ticker?: string
+          total_value?: number | null
+        }
+        Relationships: []
+      }
+      run_log: {
+        Row: {
+          created_at: string | null
+          equity: number | null
+          filings_fetched: number | null
+          id: number
+          mode: string | null
+          signals_evaluated: number | null
+          spy_r3m: number | null
+          trades_taken: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          equity?: number | null
+          filings_fetched?: number | null
+          id?: number
+          mode?: string | null
+          signals_evaluated?: number | null
+          spy_r3m?: number | null
+          trades_taken?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          equity?: number | null
+          filings_fetched?: number | null
+          id?: number
+          mode?: string | null
+          signals_evaluated?: number | null
+          spy_r3m?: number | null
+          trades_taken?: number | null
         }
         Relationships: []
       }
       sec_filings: {
         Row: {
-          accession_no: string
-          cash_and_equivalents: number | null
+          accession_number: string
           cik: string | null
-          cluster_count: number | null
           company_name: string | null
-          current_ratio: number | null
-          debt_to_equity: number | null
-          delta_ownership: number | null
-          exchange: string | null
-          filed_at: string | null
-          fiscal_year_end: string | null
-          form_type: string | null
-          insider_name: string | null
-          insider_title: string | null
-          is_derivative: boolean | null
-          net_income: number | null
-          operating_cash_flow: number | null
-          period_of_report: string | null
-          price_per_share: number | null
-          revenue: number | null
-          security_title: string | null
-          shares_owned_after: number | null
-          shares_owned_before: number | null
-          sic: string | null
-          sic_description: string | null
-          ticker: string | null
-          total_assets: number | null
-          total_debt: number | null
-          total_equity: number | null
-          total_liabilities: number | null
-          total_value: number | null
-          transaction_code: string | null
-          transaction_date: string | null
-          transaction_shares: number | null
-        }
-        Insert: {
-          accession_no: string
-          cash_and_equivalents?: number | null
-          cik?: string | null
-          cluster_count?: number | null
-          company_name?: string | null
-          current_ratio?: number | null
-          debt_to_equity?: number | null
-          delta_ownership?: number | null
-          exchange?: string | null
-          filed_at?: string | null
-          fiscal_year_end?: string | null
-          form_type?: string | null
-          insider_name?: string | null
-          insider_title?: string | null
-          is_derivative?: boolean | null
-          net_income?: number | null
-          operating_cash_flow?: number | null
-          period_of_report?: string | null
-          price_per_share?: number | null
-          revenue?: number | null
-          security_title?: string | null
-          shares_owned_after?: number | null
-          shares_owned_before?: number | null
-          sic?: string | null
-          sic_description?: string | null
-          ticker?: string | null
-          total_assets?: number | null
-          total_debt?: number | null
-          total_equity?: number | null
-          total_liabilities?: number | null
-          total_value?: number | null
-          transaction_code?: string | null
-          transaction_date?: string | null
-          transaction_shares?: number | null
-        }
-        Update: {
-          accession_no?: string
-          cash_and_equivalents?: number | null
-          cik?: string | null
-          cluster_count?: number | null
-          company_name?: string | null
-          current_ratio?: number | null
-          debt_to_equity?: number | null
-          delta_ownership?: number | null
-          exchange?: string | null
-          filed_at?: string | null
-          fiscal_year_end?: string | null
-          form_type?: string | null
-          insider_name?: string | null
-          insider_title?: string | null
-          is_derivative?: boolean | null
-          net_income?: number | null
-          operating_cash_flow?: number | null
-          period_of_report?: string | null
-          price_per_share?: number | null
-          revenue?: number | null
-          security_title?: string | null
-          shares_owned_after?: number | null
-          shares_owned_before?: number | null
-          sic?: string | null
-          sic_description?: string | null
-          ticker?: string | null
-          total_assets?: number | null
-          total_debt?: number | null
-          total_equity?: number | null
-          total_liabilities?: number | null
-          total_value?: number | null
-          transaction_code?: string | null
-          transaction_date?: string | null
-          transaction_shares?: number | null
-        }
-        Relationships: []
-      }
-      usage_logs: {
-        Row: {
-          created_at: string
-          endpoint: string
+          created_at: string | null
+          description: string | null
+          filing_date: string
+          filing_url: string | null
+          form_type: string
           id: number
-          latency_ms: number
-          status: number
-          user_id: string
+          report_date: string | null
+          ticker: string | null
         }
         Insert: {
-          created_at?: string
-          endpoint: string
+          accession_number: string
+          cik?: string | null
+          company_name?: string | null
+          created_at?: string | null
+          description?: string | null
+          filing_date: string
+          filing_url?: string | null
+          form_type: string
           id?: number
-          latency_ms?: number
-          status?: number
-          user_id: string
+          report_date?: string | null
+          ticker?: string | null
         }
         Update: {
-          created_at?: string
-          endpoint?: string
+          accession_number?: string
+          cik?: string | null
+          company_name?: string | null
+          created_at?: string | null
+          description?: string | null
+          filing_date?: string
+          filing_url?: string | null
+          form_type?: string
           id?: number
-          latency_ms?: number
-          status?: number
-          user_id?: string
+          report_date?: string | null
+          ticker?: string | null
         }
         Relationships: []
       }
-      watched_tickers: {
+      signals: {
         Row: {
-          created_at: string
+          atr_pct: number | null
+          avg_vol_30d: number | null
+          cluster: boolean | null
+          cluster_size: number | null
+          created_at: string | null
+          filed_at: string
+          filter_reason: string | null
+          h52: number | null
+          id: number
+          insider_names: string[] | null
+          kelly: number | null
+          r3m: number | null
+          score: number | null
+          score_components: Json | null
+          spy_r3m: number | null
+          status: string | null
           ticker: string
-          user_id: string
+          total_value: number | null
         }
         Insert: {
-          created_at?: string
+          atr_pct?: number | null
+          avg_vol_30d?: number | null
+          cluster?: boolean | null
+          cluster_size?: number | null
+          created_at?: string | null
+          filed_at: string
+          filter_reason?: string | null
+          h52?: number | null
+          id?: number
+          insider_names?: string[] | null
+          kelly?: number | null
+          r3m?: number | null
+          score?: number | null
+          score_components?: Json | null
+          spy_r3m?: number | null
+          status?: string | null
           ticker: string
-          user_id: string
+          total_value?: number | null
         }
         Update: {
-          created_at?: string
+          atr_pct?: number | null
+          avg_vol_30d?: number | null
+          cluster?: boolean | null
+          cluster_size?: number | null
+          created_at?: string | null
+          filed_at?: string
+          filter_reason?: string | null
+          h52?: number | null
+          id?: number
+          insider_names?: string[] | null
+          kelly?: number | null
+          r3m?: number | null
+          score?: number | null
+          score_components?: Json | null
+          spy_r3m?: number | null
+          status?: string | null
           ticker?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      webhook_deliveries: {
-        Row: {
-          attempt: number
-          attempted_at: string
-          event: string
-          id: string
-          payload: Json
-          response_body: string | null
-          response_code: number | null
-          status: string
-          user_id: string
-          webhook_id: string
-        }
-        Insert: {
-          attempt?: number
-          attempted_at?: string
-          event: string
-          id?: string
-          payload: Json
-          response_body?: string | null
-          response_code?: number | null
-          status?: string
-          user_id: string
-          webhook_id: string
-        }
-        Update: {
-          attempt?: number
-          attempted_at?: string
-          event?: string
-          id?: string
-          payload?: Json
-          response_body?: string | null
-          response_code?: number | null
-          status?: string
-          user_id?: string
-          webhook_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "webhook_deliveries_webhook_id_fkey"
-            columns: ["webhook_id"]
-            isOneToOne: false
-            referencedRelation: "webhooks"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      webhooks: {
-        Row: {
-          active: boolean
-          created_at: string
-          events: string[]
-          id: string
-          label: string
-          last_delivery_at: string | null
-          secret: string
-          url: string
-          user_id: string
-        }
-        Insert: {
-          active?: boolean
-          created_at?: string
-          events?: string[]
-          id?: string
-          label?: string
-          last_delivery_at?: string | null
-          secret: string
-          url: string
-          user_id: string
-        }
-        Update: {
-          active?: boolean
-          created_at?: string
-          events?: string[]
-          id?: string
-          label?: string
-          last_delivery_at?: string | null
-          secret?: string
-          url?: string
-          user_id?: string
+          total_value?: number | null
         }
         Relationships: []
       }
