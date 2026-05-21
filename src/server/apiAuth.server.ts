@@ -364,7 +364,7 @@ export function parseLimit(url: URL, defaultLimit = 25, max = 100): number {
   return Math.min(Math.floor(raw), max);
 }
 
-export type Cursor = { filed_at: string; accession_no: string };
+export type Cursor = { filing_date: string; accession_number: string };
 
 /** Decode a base64 cursor. Returns null if missing or malformed. */
 export function decodeCursor(url: URL): Cursor | null {
@@ -375,8 +375,8 @@ export function decodeCursor(url: URL): Cursor | null {
     const parsed = JSON.parse(json);
     if (
       parsed &&
-      typeof parsed.filed_at === "string" &&
-      typeof parsed.accession_no === "string"
+      typeof parsed.filing_date === "string" &&
+      typeof parsed.accession_number === "string"
     ) {
       return parsed;
     }
