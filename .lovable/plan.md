@@ -1,147 +1,65 @@
-# SECStream — Remaining work plan
 
-Building everything in order, one phase per turn. You approve this once and I'll work through it.
+## Goal
 
-Skipping email work per your answer (Supabase defaults are fine for now).
+User flow already exists end-to-end:
+1. Sign up at `/signup` → profile + default API key auto-created
+2. Copy `sk_live_...` from `/dashboard`
+3. `curl -H "Authorization: Bearer sk_live_..." https://.../api/public/v1/filings?ticker=AAPL`
 
----
+**The problem**: every public endpoint queries columns that don't exist on the real `sec_filings` table, so every call returns a 500. The real table only has:
 
-## Phase 1 — Critical: lock down the API
+`id, ticker, cik, company_name, accession_number, report_date, filing_date, form_type, filing_url, description, created_at`
 
-### 1. Structured error responses
-First so everything else uses the new shape.
+No `accession_no`, no `filed_at`, no fundamentals columns (revenue, net_income, …), no insider columns, no clusters. The fancier endpoints (`/insider`, `/fundamentals`, `/clusters`, `/company`, `/quote`, `/filings/batch`) were built against a fantasy schema.
 
-- New helper `apiError(code, message, status, details?)` in `src/server/apiAuth.server.ts`
-- Standard JSON shape:
-  ```
-  { "error": { "code": "missing_param", "message": "...", "param": "ticker" } }
-  ```
-- Codes: `unauthorized`, `forbidden`, `plan_inactive`, `rate_limited`, `missing_param`, `invalid_param`, `not_found`, `internal_error`
-- Update all 7 endpoints to use it
-- Add `X-Request-Id` header (UUID) for support traceability
+## Plan
 
-### 2. Plan enforcement
-- In `handlePublicApi`, after auth, fetch the user's `profiles.plan`
-- If `plan !== 'active'` → return 403 `plan_inactive` with renewal date
-- Cache the plan check on the `api_keys` row check (single query with join) to avoid an extra round-trip
-- Free trial logic: `profiles.renewal_date` in the future = active
+### 1. Rewrite `/v1/filings` against the real columns
+- Select `accession_number, form_type, filing_date, report_date, ticker, company_name, cik, filing_url, description`
+- Order by `filing_date desc, accession_number desc`
+- Cursor switches from `{filed_at, accession_no}` → `{filing_date, accession_number}` (update `Cursor` type in `apiAuth.server.ts`)
+- Keep `?ticker=`, `?type=`, `?limit=`, `?fields=`, `?cursor=`, CSV output
 
-### 3. Rate limiting (best-effort)
-Caveat: no Redis on Lovable, so this counts requests in `usage_logs` per key for the last 60s. Adds ~10ms per request. Not bulletproof under concurrent bursts but catches the runaway-script case you're worried about.
+### 2. Rewrite `/v1/search`
+- Search `sec_filings` by `ticker ilike` + `company_name ilike`
+- Drop `insider` scope (no insider data on this table)
+- Return distinct `{ticker, company_name, cik}`
 
-- Add `rate_limit_per_min` column to `profiles` (default 60 free, configurable)
-- In `handlePublicApi`, before serving: `SELECT count(*) FROM usage_logs WHERE user_id = ? AND created_at > now() - interval '1 minute'`
-- If over limit → 429 `rate_limited` with `Retry-After` header and `X-RateLimit-*` headers on every response
-- Add index: `CREATE INDEX usage_logs_user_recent ON usage_logs (user_id, created_at DESC)`
+### 3. Rewrite `/v1/company?ticker=...`
+- Return the latest row per ticker: `{ticker, company_name, cik, latest_filing_date, latest_form_type}`
+- Plus a count of filings on file
 
-### 4. Pagination on list endpoints
-Affects `/filings`, `/search`, `/insider`, `/fundamentals`, `/clusters`.
+### 4. Rewrite `/v1/filings/batch`
+- POST `{tickers: string[], limit_per_ticker?: number, type?: string}`
+- Same column projection as `/v1/filings`, grouped by ticker
 
-- Cursor-based using `filed_at + accession_no` (stable, no offset drift)
-- Query params: `limit` (default 25, max 100), `cursor` (opaque base64 of `{filed_at, accession_no}`)
-- Response wraps results: `{ data: [...], pagination: { next_cursor, has_more } }`
-- This is a **breaking change** to the response shape — I'll bump endpoints to `/api/public/v1/...` (already there) and update playground + docs to match
+### 5. Remove or stub endpoints with no backing data
+Mark these as `501 Not Implemented` with a clear message (keeps URLs but stops 500s and stops misleading docs):
+- `/v1/insider` — no insider transaction columns exist
+- `/v1/fundamentals` — no financial columns exist
+- `/v1/clusters` — no cluster columns exist
+- `/v1/quote` — no price data exists
 
----
+### 6. Update `/docs` and `/docs/sdk`
+- Remove example responses referencing non-existent fields
+- Show only `filings`, `search`, `company`, `filings/batch` as live; the others labeled "coming soon"
+- Update the curl example on `/dashboard` onboarding wizard to a request that actually returns rows
 
-## Phase 2 — Important: user-facing polish
+### 7. Update landing/company pages
+- `/companies/$ticker` already SSRs — update its loader to use the real columns so the page doesn't render blank
 
-### 5. Usage dashboard upgrade
-Replace the simple bar chart with a real analytics panel.
+### Technical notes
 
-- New section on `/dashboard`:
-  - **Stat row**: Today / 7-day / 30-day / Success rate
-  - **Time series**: requests/day for 30d (existing chart, kept)
-  - **Endpoint breakdown**: top 5 endpoints by call count (table)
-  - **Status breakdown**: 2xx / 4xx / 5xx counts with colored badges
-  - **Latency**: p50, p95, p99 over 24h
-  - **Recent errors table**: last 20 non-2xx requests with endpoint, status, time
-- All driven by client-side queries to `usage_logs` (RLS already scopes to user)
+- No DB migration needed — we are conforming code to the existing schema, not the other way around.
+- `Cursor` type rename (`filed_at` → `filing_date`, `accession_no` → `accession_number`) is a 1-line change in `apiAuth.server.ts` plus callers.
+- All endpoints keep the same auth/rate-limit/usage-log wrapper (`handlePublicApi`), so signup → key → call flow is unchanged.
+- The `insider_form4_filings` table DOES have rich insider data — we can wire `/v1/insider` against it instead of stubbing if you want. Say the word and I'll include that in step 5.
 
-### 6. API key management UI
-Multi-key support so users can rotate without downtime.
+### Out of scope (unless you confirm)
+- Adding new ingestion (no fundamentals/quotes data to expose)
+- Paid tier enforcement (already works as-is)
+- Webhooks dispatch (already scaffolded, separate concern)
 
-- DB: drop the "delete all then insert" model in `regenerateKey`. Allow multiple active keys per user (already supported by schema, just needs UI).
-- New "API Keys" section on dashboard:
-  - Table: label, prefix•••last4, created, last used, [Reveal] [Copy] [Revoke]
-  - "Create new key" with label input (e.g., "Production", "Staging")
-  - Revoke = DELETE row, takes effect immediately
-- Update `useAuth` to return `apiKeys: ApiKey[]` instead of `apiKey: ApiKey | null`
-- Backwards compat: dashboard quickstart picks the first key
+## Open question
 
----
-
-## Phase 3 — Nice-to-haves
-
-### 7. Better SDK ergonomics
-Not building full npm packages yet — just much better copy-paste examples.
-
-- New `/docs/sdk` page (or section in `/docs`) with tabbed examples per endpoint:
-  - `curl`, `Node.js (fetch)`, `Python (requests)`, `Python (httpx async)`
-- Tiny TypeScript client snippet users can paste into their project:
-  ```ts
-  // 30 lines, no deps, copy into your project
-  export class SECStream { constructor(key) {...} filings(opts) {...} }
-  ```
-- Downloadable `.ts` and `.py` files served from `/api/public/sdk/secstream.ts` etc.
-
-### 8. Webhooks (watched-ticker filing alerts)
-Lets users get notified when a new filing lands for tickers they care about.
-
-- New tables:
-  - `webhooks(id, user_id, url, secret, events[], active, created_at)` — events = `['filing.created']`
-  - `webhook_deliveries(id, webhook_id, payload, status, response_code, attempted_at)` for debugging
-  - `watched_tickers(user_id, ticker)` — which tickers each user wants alerts for
-- Dashboard UI: add/remove webhooks, add/remove watched tickers, view recent deliveries
-- Trigger: Postgres trigger on `sec_filings INSERT` calls `pg_notify` → a `/api/public/v1/_internal/dispatch-webhooks` endpoint (called by pg_cron every minute) reads pending notifications and POSTs to user URLs with HMAC-SHA256 signature
-- Signature header: `X-SECStream-Signature: sha256=...` (Stripe-compatible pattern)
-- Retry: 3 attempts with exponential backoff, then mark delivery failed
-
-### 9. Admin dashboard (just for you)
-Hardcoded email allowlist gate per your answer.
-
-- `src/lib/admin.ts` exports `ADMIN_EMAILS = ['your@email.com']` and `isAdmin(user)` helper
-- New route `/admin` — redirects to `/dashboard` if user not in allowlist
-- Panels:
-  - Total users, active subscriptions, MRR estimate
-  - API call volume (24h, 7d, 30d) with chart
-  - Top users by request count
-  - Top endpoints by call count
-  - Recent signups table
-  - Recent errors across all users
-- All queries hit `usage_logs`, `profiles`, `api_keys` server-side via `createServerFn` with admin email check
-
----
-
-## Database migrations needed
-
-```sql
--- Phase 1
-ALTER TABLE profiles ADD COLUMN rate_limit_per_min int NOT NULL DEFAULT 60;
-CREATE INDEX usage_logs_user_recent ON usage_logs (user_id, created_at DESC);
-
--- Phase 3 (webhooks)
-CREATE TABLE webhooks (...);
-CREATE TABLE webhook_deliveries (...);
-CREATE TABLE watched_tickers (...);
--- + RLS policies + trigger on sec_filings
-```
-
----
-
-## Order of execution
-
-I'll do these in 3 turns, asking for a quick check-in between phases:
-
-1. **Turn 1 (Phase 1)**: error format + plan enforcement + rate limiting + pagination
-2. **Turn 2 (Phase 2)**: usage dashboard + multi-key UI
-3. **Turn 3 (Phase 3)**: SDK examples + webhooks + admin dashboard
-
-Phase 3 is the biggest by far — webhooks alone is substantial. If you want, I can split that into its own approval after Phase 2.
-
-## What I'm NOT doing (per your answers)
-- Email customization (defaults stay)
-- Payments / Stripe (you didn't list it; I'd recommend doing this before launch but separate convo)
-- Real `/quote` market data (still returns Form 4 price proxy until you wire a market data source)
-
-Ready to start Phase 1 on approval.
+Do you want `/v1/insider` wired against the real `insider_form4_filings` table (it has insider name, transaction code, shares, price, value)? Or stub it as "coming soon" like fundamentals/quote/clusters?

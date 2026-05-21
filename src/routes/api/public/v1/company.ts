@@ -13,28 +13,34 @@ export const Route = createFileRoute("/api/public/v1/company")({
               param: "ticker",
             });
 
-          const { data, error } = await supabaseAdmin
-            .from("sec_filings")
-            .select("ticker,company_name,cik,sic,sic_description,exchange,fiscal_year_end")
-            .eq("ticker", ticker.toUpperCase())
-            .order("filed_at", { ascending: false })
-            .limit(1)
-            .maybeSingle();
+          const t = ticker.toUpperCase();
+          const [latest, countRes] = await Promise.all([
+            supabaseAdmin
+              .from("sec_filings")
+              .select("ticker,company_name,cik,form_type,filing_date")
+              .eq("ticker", t)
+              .order("filing_date", { ascending: false })
+              .limit(1)
+              .maybeSingle(),
+            supabaseAdmin
+              .from("sec_filings")
+              .select("id", { count: "exact", head: true })
+              .eq("ticker", t),
+          ]);
 
-          if (error) return apiError("internal_error", error.message, 500);
-          if (!data)
-            return apiError("not_found", `No company found for ticker ${ticker.toUpperCase()}`, 404);
+          if (latest.error) return apiError("internal_error", latest.error.message, 500);
+          if (!latest.data)
+            return apiError("not_found", `No company found for ticker ${t}`, 404);
 
           return {
             ok: true,
             data: {
-              ticker: data.ticker,
-              name: data.company_name,
-              cik: data.cik,
-              sic: data.sic,
-              sic_description: data.sic_description,
-              exchange: data.exchange,
-              fiscal_year_end: data.fiscal_year_end,
+              ticker: latest.data.ticker,
+              name: latest.data.company_name,
+              cik: latest.data.cik,
+              latest_filing_date: latest.data.filing_date,
+              latest_form_type: latest.data.form_type,
+              total_filings: countRes.count ?? 0,
             },
           };
         }),

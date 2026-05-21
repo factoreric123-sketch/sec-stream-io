@@ -56,14 +56,13 @@ export const Route = createFileRoute("/api/public/v1/filings/batch")({
               ? Math.min(Math.floor(body.limit_per_ticker), 50)
               : parseLimit(url, 10, 50);
 
-          // Single round-trip: fetch all rows for all tickers, then group + cap per ticker.
           let q = supabaseAdmin
             .from("sec_filings")
             .select(
-              "accession_no,form_type,filed_at,period_of_report,ticker,company_name,cik,sic_description,exchange,revenue,net_income,total_assets,total_equity,total_debt"
+              "accession_number,form_type,filing_date,report_date,ticker,company_name,cik,filing_url,description"
             )
             .in("ticker", tickers)
-            .order("filed_at", { ascending: false, nullsFirst: false })
+            .order("filing_date", { ascending: false, nullsFirst: false })
             .limit(tickers.length * perTicker * 2);
           if (formType) q = q.eq("form_type", formType);
 

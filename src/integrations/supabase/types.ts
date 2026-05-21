@@ -16,37 +16,40 @@ export type Database = {
     Tables: {
       api_keys: {
         Row: {
-          calls_this_month: number | null
-          created_at: string | null
-          customer_email: string | null
-          customer_name: string
-          id: number
-          is_active: boolean | null
-          key: string
-          last_reset_date: string | null
-          monthly_limit: number | null
+          created_at: string
+          id: string
+          key_hash: string
+          key_last4: string
+          key_plaintext: string
+          key_prefix: string
+          label: string
+          last_used_at: string | null
+          scopes: string[]
+          user_id: string
         }
         Insert: {
-          calls_this_month?: number | null
-          created_at?: string | null
-          customer_email?: string | null
-          customer_name: string
-          id?: number
-          is_active?: boolean | null
-          key: string
-          last_reset_date?: string | null
-          monthly_limit?: number | null
+          created_at?: string
+          id?: string
+          key_hash: string
+          key_last4: string
+          key_plaintext: string
+          key_prefix: string
+          label?: string
+          last_used_at?: string | null
+          scopes?: string[]
+          user_id: string
         }
         Update: {
-          calls_this_month?: number | null
-          created_at?: string | null
-          customer_email?: string | null
-          customer_name?: string
-          id?: number
-          is_active?: boolean | null
-          key?: string
-          last_reset_date?: string | null
-          monthly_limit?: number | null
+          created_at?: string
+          id?: string
+          key_hash?: string
+          key_last4?: string
+          key_plaintext?: string
+          key_prefix?: string
+          label?: string
+          last_used_at?: string | null
+          scopes?: string[]
+          user_id?: string
         }
         Relationships: []
       }
@@ -239,6 +242,36 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          plan: string
+          rate_limit_per_min: number
+          renewal_date: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id: string
+          plan?: string
+          rate_limit_per_min?: number
+          renewal_date?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          plan?: string
+          rate_limit_per_min?: number
+          renewal_date?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       run_log: {
         Row: {
           created_at: string | null
@@ -374,6 +407,134 @@ export type Database = {
           status?: string | null
           ticker?: string
           total_value?: number | null
+        }
+        Relationships: []
+      }
+      usage_logs: {
+        Row: {
+          created_at: string
+          endpoint: string
+          id: number
+          latency_ms: number
+          status: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          endpoint: string
+          id?: number
+          latency_ms?: number
+          status?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          endpoint?: string
+          id?: number
+          latency_ms?: number
+          status?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      watched_tickers: {
+        Row: {
+          created_at: string
+          ticker: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          ticker: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          ticker?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      webhook_deliveries: {
+        Row: {
+          attempt: number
+          attempted_at: string
+          event: string
+          id: string
+          payload: Json
+          response_body: string | null
+          response_code: number | null
+          status: string
+          user_id: string
+          webhook_id: string
+        }
+        Insert: {
+          attempt?: number
+          attempted_at?: string
+          event: string
+          id?: string
+          payload: Json
+          response_body?: string | null
+          response_code?: number | null
+          status?: string
+          user_id: string
+          webhook_id: string
+        }
+        Update: {
+          attempt?: number
+          attempted_at?: string
+          event?: string
+          id?: string
+          payload?: Json
+          response_body?: string | null
+          response_code?: number | null
+          status?: string
+          user_id?: string
+          webhook_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_deliveries_webhook_id_fkey"
+            columns: ["webhook_id"]
+            isOneToOne: false
+            referencedRelation: "webhooks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      webhooks: {
+        Row: {
+          active: boolean
+          created_at: string
+          events: string[]
+          id: string
+          label: string
+          last_delivery_at: string | null
+          secret: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          events?: string[]
+          id?: string
+          label?: string
+          last_delivery_at?: string | null
+          secret: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          events?: string[]
+          id?: string
+          label?: string
+          last_delivery_at?: string | null
+          secret?: string
+          url?: string
+          user_id?: string
         }
         Relationships: []
       }

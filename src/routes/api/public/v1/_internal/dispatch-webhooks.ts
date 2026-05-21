@@ -1,8 +1,5 @@
 // Internal endpoint called by pg_cron (or manual cron) to dispatch
 // pending webhook deliveries. Protected by an INTERNAL_DISPATCH_TOKEN secret.
-//
-// Flow: also enqueues new deliveries for any sec_filings INSERTed since the
-// last run that match an active webhook's watched_tickers.
 import { createFileRoute } from "@tanstack/react-router";
 import { createHmac } from "crypto";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
@@ -23,11 +20,11 @@ export const Route = createFileRoute("/api/public/v1/_internal/dispatch-webhooks
         const result = { enqueued: 0, delivered: 0, failed: 0 };
 
         // 1. Enqueue new filings (last 5 minutes) for matching watchers.
-        const since = new Date(Date.now() - 5 * 60_000).toISOString();
+        const since = new Date(Date.now() - 5 * 60_000).toISOString().slice(0, 10);
         const { data: newFilings } = await supabaseAdmin
           .from("sec_filings")
-          .select("accession_no,form_type,filed_at,ticker,company_name,cik")
-          .gte("filed_at", since)
+          .select("accession_number,form_type,filing_date,ticker,company_name,cik")
+          .gte("filing_date", since)
           .limit(500);
 
         if (newFilings && newFilings.length > 0) {
@@ -68,7 +65,7 @@ export const Route = createFileRoute("/api/public/v1/_internal/dispatch-webhooks
                 webhook_id: string;
                 user_id: string;
                 event: string;
-                payload: any;
+                payload: Record<string, unknown>;
               }> = [];
               for (const filing of newFilings) {
                 if (!filing.ticker) continue;
@@ -90,7 +87,8 @@ export const Route = createFileRoute("/api/public/v1/_internal/dispatch-webhooks
               }
 
               if (toInsert.length > 0) {
-                await supabaseAdmin.from("webhook_deliveries").insert(toInsert);
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                await supabaseAdmin.from("webhook_deliveries").insert(toInsert as any);
                 result.enqueued = toInsert.length;
               }
             }

@@ -22,23 +22,22 @@ export const Route = createFileRoute("/api/public/v1/filings")({
             });
           const formType = url.searchParams.get("type");
           const limit = parseLimit(url, 25, 100);
-          const include = url.searchParams.get("include"); // "market"
           const fields = url.searchParams.get("fields");
           const cursor = decodeCursor(url);
 
           let q = supabaseAdmin
             .from("sec_filings")
             .select(
-              "accession_no,form_type,filed_at,period_of_report,ticker,company_name,cik,sic,sic_description,exchange,fiscal_year_end,revenue,net_income,operating_cash_flow,total_assets,total_liabilities,total_equity,total_debt,cash_and_equivalents,current_ratio,debt_to_equity"
+              "accession_number,form_type,filing_date,report_date,ticker,company_name,cik,filing_url,description"
             )
             .eq("ticker", ticker.toUpperCase())
-            .order("filed_at", { ascending: false, nullsFirst: false })
-            .order("accession_no", { ascending: false })
+            .order("filing_date", { ascending: false, nullsFirst: false })
+            .order("accession_number", { ascending: false })
             .limit(limit + 1);
           if (formType) q = q.eq("form_type", formType);
           if (cursor) {
             q = q.or(
-              `filed_at.lt.${cursor.filed_at},and(filed_at.eq.${cursor.filed_at},accession_no.lt.${cursor.accession_no})`
+              `filing_date.lt.${cursor.filing_date},and(filing_date.eq.${cursor.filing_date},accession_number.lt.${cursor.accession_number})`
             );
           }
 
@@ -50,37 +49,16 @@ export const Route = createFileRoute("/api/public/v1/filings")({
           const page = hasMore ? rows.slice(0, limit) : rows;
           const last = page[page.length - 1];
           const nextCursor =
-            hasMore && last?.filed_at && last?.accession_no
-              ? encodeCursor({ filed_at: last.filed_at, accession_no: last.accession_no })
+            hasMore && last?.filing_date && last?.accession_number
+              ? encodeCursor({
+                  filing_date: last.filing_date,
+                  accession_number: last.accession_number,
+                })
               : null;
 
-          const filings = page.map((f) => {
-            const full = {
-              accession_no: f.accession_no,
-              form_type: f.form_type,
-              filed_at: f.filed_at,
-              period_of_report: f.period_of_report,
-              ticker: f.ticker,
-              company_name: f.company_name,
-              cik: f.cik,
-              sic: f.sic,
-              sic_description: f.sic_description,
-              exchange: f.exchange,
-              fiscal_year_end: f.fiscal_year_end,
-              revenue: f.revenue,
-              net_income: f.net_income,
-              operating_cash_flow: f.operating_cash_flow,
-              total_assets: f.total_assets,
-              total_liabilities: f.total_liabilities,
-              total_equity: f.total_equity,
-              total_debt: f.total_debt,
-              cash_and_equivalents: f.cash_and_equivalents,
-              current_ratio: f.current_ratio,
-              debt_to_equity: f.debt_to_equity,
-              ...(include === "market" && { market_note: "Market overlay coming soon." }),
-            };
-            return pickFields(full, fields);
-          });
+          const filings = page.map((f) =>
+            pickFields(f as Record<string, unknown>, fields)
+          );
 
           return {
             ok: true,

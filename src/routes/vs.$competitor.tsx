@@ -112,7 +112,7 @@ function VsPage() {
               </tr>
             </thead>
             <tbody>
-              {rows.map((r, i) => (
+              {rows.map((r: { feature: string; us: boolean | string; them: boolean | string }, i: number) => (
                 <tr key={i} className="border-b border-border/30 last:border-0">
                   <td className="px-4 py-3">{r.feature}</td>
                   <td className="px-4 py-3 text-center">
