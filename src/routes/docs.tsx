@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/SiteHeader";
 import { CodeBlock } from "@/components/CodeBlock";
 
@@ -27,6 +27,11 @@ const sections = [
   { id: "errors", label: "Errors" },
   { id: "limits", label: "Rate limits" },
 ] as Array<{ id: string; label: string } | { group: string }>;
+
+const externalLinks = [
+  { to: "/docs/schema", label: "Data Schema" },
+  { to: "/docs/sdk",    label: "SDK & Examples" },
+];
 
 function DocsPage() {
   return (
@@ -58,6 +63,20 @@ function DocsPage() {
                 ),
               )}
             </nav>
+            <div className="mt-6 border-t border-border pt-4 space-y-1">
+              <p className="px-2 pb-1 font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground/70">
+                More
+              </p>
+              {externalLinks.map((l) => (
+                <Link
+                  key={l.to}
+                  to={l.to}
+                  className="block rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground cursor-pointer"
+                >
+                  {l.label}
+                </Link>
+              ))}
+            </div>
           </div>
         </aside>
 

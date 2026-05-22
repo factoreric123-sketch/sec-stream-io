@@ -22,6 +22,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as VsCompetitorRouteImport } from './routes/vs.$competitor'
 import { Route as ExamplesSlugRouteImport } from './routes/examples.$slug'
 import { Route as DocsSdkRouteImport } from './routes/docs.sdk'
+import { Route as DocsSchemaRouteImport } from './routes/docs.schema'
 import { Route as CompaniesTickerRouteImport } from './routes/companies.$ticker'
 import { Route as ApiPublicV1SearchRouteImport } from './routes/api/public/v1/search'
 import { Route as ApiPublicV1QuoteRouteImport } from './routes/api/public/v1/quote'
@@ -98,6 +99,11 @@ const DocsSdkRoute = DocsSdkRouteImport.update({
   path: '/sdk',
   getParentRoute: () => DocsRoute,
 } as any)
+const DocsSchemaRoute = DocsSchemaRouteImport.update({
+  id: '/schema',
+  path: '/schema',
+  getParentRoute: () => DocsRoute,
+} as any)
 const CompaniesTickerRoute = CompaniesTickerRouteImport.update({
   id: '/companies/$ticker',
   path: '/companies/$ticker',
@@ -163,6 +169,7 @@ export interface FileRoutesByFullPath {
   '/status': typeof StatusRoute
   '/companies/$ticker': typeof CompaniesTickerRoute
   '/docs/sdk': typeof DocsSdkRoute
+  '/docs/schema': typeof DocsSchemaRoute
   '/examples/$slug': typeof ExamplesSlugRoute
   '/vs/$competitor': typeof VsCompetitorRoute
   '/api/public/v1/clusters': typeof ApiPublicV1ClustersRoute
@@ -188,6 +195,7 @@ export interface FileRoutesByTo {
   '/status': typeof StatusRoute
   '/companies/$ticker': typeof CompaniesTickerRoute
   '/docs/sdk': typeof DocsSdkRoute
+  '/docs/schema': typeof DocsSchemaRoute
   '/examples/$slug': typeof ExamplesSlugRoute
   '/vs/$competitor': typeof VsCompetitorRoute
   '/api/public/v1/clusters': typeof ApiPublicV1ClustersRoute
@@ -214,6 +222,7 @@ export interface FileRoutesById {
   '/status': typeof StatusRoute
   '/companies/$ticker': typeof CompaniesTickerRoute
   '/docs/sdk': typeof DocsSdkRoute
+  '/docs/schema': typeof DocsSchemaRoute
   '/examples/$slug': typeof ExamplesSlugRoute
   '/vs/$competitor': typeof VsCompetitorRoute
   '/api/public/v1/clusters': typeof ApiPublicV1ClustersRoute
@@ -241,6 +250,7 @@ export interface FileRouteTypes {
     | '/status'
     | '/companies/$ticker'
     | '/docs/sdk'
+    | '/docs/schema'
     | '/examples/$slug'
     | '/vs/$competitor'
     | '/api/public/v1/clusters'
@@ -266,6 +276,7 @@ export interface FileRouteTypes {
     | '/status'
     | '/companies/$ticker'
     | '/docs/sdk'
+    | '/docs/schema'
     | '/examples/$slug'
     | '/vs/$competitor'
     | '/api/public/v1/clusters'
@@ -291,6 +302,7 @@ export interface FileRouteTypes {
     | '/status'
     | '/companies/$ticker'
     | '/docs/sdk'
+    | '/docs/schema'
     | '/examples/$slug'
     | '/vs/$competitor'
     | '/api/public/v1/clusters'
@@ -420,6 +432,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocsSdkRouteImport
       parentRoute: typeof DocsRoute
     }
+    '/docs/schema': {
+      id: '/docs/schema'
+      path: '/schema'
+      fullPath: '/docs/schema'
+      preLoaderRoute: typeof DocsSchemaRouteImport
+      parentRoute: typeof DocsRoute
+    }
     '/companies/$ticker': {
       id: '/companies/$ticker'
       path: '/companies/$ticker'
@@ -495,10 +514,12 @@ declare module '@tanstack/react-router' {
 
 interface DocsRouteChildren {
   DocsSdkRoute: typeof DocsSdkRoute
+  DocsSchemaRoute: typeof DocsSchemaRoute
 }
 
 const DocsRouteChildren: DocsRouteChildren = {
   DocsSdkRoute: DocsSdkRoute,
+  DocsSchemaRoute: DocsSchemaRoute,
 }
 
 const DocsRouteWithChildren = DocsRoute._addFileChildren(DocsRouteChildren)
