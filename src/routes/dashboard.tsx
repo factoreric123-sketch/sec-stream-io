@@ -212,9 +212,9 @@ function ApiKeysPanel({
         <div className="mt-5 space-y-2">
           {apiKeys.map((k) => {
             const visible = revealId === k.id;
-            const display = visible
-              ? k.keyPlaintext
-              : `${k.keyPrefix}${"•".repeat(20)}${k.keyLast4}`;
+            const masked = `${k.keyPrefix}${"•".repeat(20)}${k.keyLast4}`;
+            const canReveal = k.keyPlaintext !== null;
+            const display = visible && k.keyPlaintext ? k.keyPlaintext : masked;
             const isConfirming = confirmRevoke === k.id;
             return (
               <div
