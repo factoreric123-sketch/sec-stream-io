@@ -28,16 +28,16 @@ export const Route = createFileRoute("/api/public/v1/filings")({
           let q = supabaseAdmin
             .from("sec_filings")
             .select(
-              "accession_number,form_type,filing_date,report_date,ticker,company_name,cik,filing_url,description"
+              "accession_number,form_type,filed_at,period_of_report,ticker,company_name,cik,filing_url"
             )
             .eq("ticker", ticker.toUpperCase())
-            .order("filing_date", { ascending: false, nullsFirst: false })
+            .order("filed_at", { ascending: false, nullsFirst: false })
             .order("accession_number", { ascending: false })
             .limit(limit + 1);
           if (formType) q = q.eq("form_type", formType);
           if (cursor) {
             q = q.or(
-              `filing_date.lt.${cursor.filing_date},and(filing_date.eq.${cursor.filing_date},accession_number.lt.${cursor.accession_number})`
+              `filed_at.lt.${cursor.filed_at},and(filed_at.eq.${cursor.filed_at},accession_number.lt.${cursor.accession_number})`
             );
           }
 
@@ -49,9 +49,9 @@ export const Route = createFileRoute("/api/public/v1/filings")({
           const page = hasMore ? rows.slice(0, limit) : rows;
           const last = page[page.length - 1];
           const nextCursor =
-            hasMore && last?.filing_date && last?.accession_number
+            hasMore && last?.filed_at && last?.accession_number
               ? encodeCursor({
-                  filing_date: last.filing_date,
+                  filed_at: last.filed_at,
                   accession_number: last.accession_number,
                 })
               : null;

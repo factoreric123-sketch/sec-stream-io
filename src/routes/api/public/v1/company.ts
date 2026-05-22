@@ -17,9 +17,9 @@ export const Route = createFileRoute("/api/public/v1/company")({
           const [latest, countRes] = await Promise.all([
             supabaseAdmin
               .from("sec_filings")
-              .select("ticker,company_name,cik,form_type,filing_date")
+              .select("ticker,company_name,cik,form_type,filed_at")
               .eq("ticker", t)
-              .order("filing_date", { ascending: false })
+              .order("filed_at", { ascending: false })
               .limit(1)
               .maybeSingle(),
             supabaseAdmin
@@ -38,7 +38,7 @@ export const Route = createFileRoute("/api/public/v1/company")({
               ticker: latest.data.ticker,
               name: latest.data.company_name,
               cik: latest.data.cik,
-              latest_filing_date: latest.data.filing_date,
+              latest_filed_at: latest.data.filed_at,
               latest_form_type: latest.data.form_type,
               total_filings: countRes.count ?? 0,
             },
