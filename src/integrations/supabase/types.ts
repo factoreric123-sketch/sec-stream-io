@@ -20,7 +20,6 @@ export type Database = {
           id: string
           key_hash: string
           key_last4: string
-          key_plaintext: string
           key_prefix: string
           label: string
           last_used_at: string | null
@@ -32,7 +31,6 @@ export type Database = {
           id?: string
           key_hash: string
           key_last4: string
-          key_plaintext: string
           key_prefix: string
           label?: string
           last_used_at?: string | null
@@ -44,7 +42,6 @@ export type Database = {
           id?: string
           key_hash?: string
           key_last4?: string
-          key_plaintext?: string
           key_prefix?: string
           label?: string
           last_used_at?: string | null
@@ -104,6 +101,33 @@ export type Database = {
           ticker?: string
           title?: string | null
           value?: number | null
+        }
+        Relationships: []
+      }
+      idempotency_records: {
+        Row: {
+          created_at: string
+          key: string
+          request_hash: string
+          response_body: Json
+          status: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          key: string
+          request_hash: string
+          response_body: Json
+          status: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          key?: string
+          request_hash?: string
+          response_body?: Json
+          status?: number
+          user_id?: string
         }
         Relationships: []
       }
@@ -269,6 +293,24 @@ export type Database = {
           rate_limit_per_min?: number
           renewal_date?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      rate_buckets: {
+        Row: {
+          bucket: number
+          count: number
+          user_id: string
+        }
+        Insert: {
+          bucket: number
+          count?: number
+          user_id: string
+        }
+        Update: {
+          bucket?: number
+          count?: number
+          user_id?: string
         }
         Relationships: []
       }
@@ -615,7 +657,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      rate_bucket_incr: {
+        Args: { p_bucket: number; p_user: string }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never
