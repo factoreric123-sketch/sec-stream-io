@@ -311,39 +311,111 @@ export type Database = {
           cik: string | null
           company_name: string | null
           created_at: string | null
-          description: string | null
-          filing_date: string
+          document_format_files: Json | null
+          entities: Json | null
+          exchange: string | null
+          filed_at: string | null
           filing_url: string | null
+          fiscal_year_end: string | null
+          footnotes: Json | null
           form_type: string
           id: number
-          report_date: string | null
+          ingestion_lag_ms: number | null
+          insider_country: string | null
+          insider_name: string | null
+          insider_title: string | null
+          is_10b5_1_plan: boolean | null
+          is_amendment: boolean | null
+          is_director: boolean | null
+          is_group_filing: boolean | null
+          is_officer: boolean | null
+          is_ten_percent_owner: boolean | null
+          is_xbrl: boolean | null
+          items: string[] | null
+          link_to_txt: string | null
+          no_longer_section_16: boolean | null
+          original_currency: string | null
+          period_of_report: string | null
+          primary_document: string | null
+          sic_code: string | null
+          state_of_incorporation: string | null
           ticker: string | null
+          total_transaction_value: number | null
+          transactions: Json | null
         }
         Insert: {
           accession_number: string
           cik?: string | null
           company_name?: string | null
           created_at?: string | null
-          description?: string | null
-          filing_date: string
+          document_format_files?: Json | null
+          entities?: Json | null
+          exchange?: string | null
+          filed_at?: string | null
           filing_url?: string | null
+          fiscal_year_end?: string | null
+          footnotes?: Json | null
           form_type: string
           id?: number
-          report_date?: string | null
+          ingestion_lag_ms?: number | null
+          insider_country?: string | null
+          insider_name?: string | null
+          insider_title?: string | null
+          is_10b5_1_plan?: boolean | null
+          is_amendment?: boolean | null
+          is_director?: boolean | null
+          is_group_filing?: boolean | null
+          is_officer?: boolean | null
+          is_ten_percent_owner?: boolean | null
+          is_xbrl?: boolean | null
+          items?: string[] | null
+          link_to_txt?: string | null
+          no_longer_section_16?: boolean | null
+          original_currency?: string | null
+          period_of_report?: string | null
+          primary_document?: string | null
+          sic_code?: string | null
+          state_of_incorporation?: string | null
           ticker?: string | null
+          total_transaction_value?: number | null
+          transactions?: Json | null
         }
         Update: {
           accession_number?: string
           cik?: string | null
           company_name?: string | null
           created_at?: string | null
-          description?: string | null
-          filing_date?: string
+          document_format_files?: Json | null
+          entities?: Json | null
+          exchange?: string | null
+          filed_at?: string | null
           filing_url?: string | null
+          fiscal_year_end?: string | null
+          footnotes?: Json | null
           form_type?: string
           id?: number
-          report_date?: string | null
+          ingestion_lag_ms?: number | null
+          insider_country?: string | null
+          insider_name?: string | null
+          insider_title?: string | null
+          is_10b5_1_plan?: boolean | null
+          is_amendment?: boolean | null
+          is_director?: boolean | null
+          is_group_filing?: boolean | null
+          is_officer?: boolean | null
+          is_ten_percent_owner?: boolean | null
+          is_xbrl?: boolean | null
+          items?: string[] | null
+          link_to_txt?: string | null
+          no_longer_section_16?: boolean | null
+          original_currency?: string | null
+          period_of_report?: string | null
+          primary_document?: string | null
+          sic_code?: string | null
+          state_of_incorporation?: string | null
           ticker?: string | null
+          total_transaction_value?: number | null
+          transactions?: Json | null
         }
         Relationships: []
       }
