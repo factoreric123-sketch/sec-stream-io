@@ -115,7 +115,7 @@ export async function withIdempotency(
         key,
         request_hash: requestHash,
         status: result.status,
-        response_body: result.body as object,
+        response_body: result.body as never,
       },
       { onConflict: "user_id,key" }
     );

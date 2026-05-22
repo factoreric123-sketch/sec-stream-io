@@ -59,10 +59,10 @@ export const Route = createFileRoute("/api/public/v1/filings/batch")({
           let q = supabaseAdmin
             .from("sec_filings")
             .select(
-              "accession_number,form_type,filing_date,report_date,ticker,company_name,cik,filing_url,description"
+              "accession_number,form_type,filed_at,period_of_report,ticker,company_name,cik,filing_url"
             )
             .in("ticker", tickers)
-            .order("filing_date", { ascending: false, nullsFirst: false })
+            .order("filed_at", { ascending: false, nullsFirst: false })
             .limit(tickers.length * perTicker * 2);
           if (formType) q = q.eq("form_type", formType);
 

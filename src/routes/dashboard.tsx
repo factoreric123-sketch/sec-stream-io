@@ -212,9 +212,9 @@ function ApiKeysPanel({
         <div className="mt-5 space-y-2">
           {apiKeys.map((k) => {
             const visible = revealId === k.id;
-            const display = visible
-              ? k.keyPlaintext
-              : `${k.keyPrefix}${"•".repeat(20)}${k.keyLast4}`;
+            const masked = `${k.keyPrefix}${"•".repeat(20)}${k.keyLast4}`;
+            const canReveal = k.keyPlaintext !== null;
+            const display = visible && k.keyPlaintext ? k.keyPlaintext : masked;
             const isConfirming = confirmRevoke === k.id;
             return (
               <div
@@ -246,15 +246,17 @@ function ApiKeysPanel({
                       variant="ghost"
                       size="sm"
                       onClick={() => setRevealId(visible ? null : k.id)}
-                      title={visible ? "Hide" : "Reveal"}
+                      title={canReveal ? (visible ? "Hide" : "Reveal") : "Full key is only shown at creation. Rotate to get a new one."}
+                      disabled={!canReveal}
                     >
                       {visible ? <EyeOff /> : <Eye />}
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => copy(k.id, k.keyPlaintext)}
+                      onClick={() => k.keyPlaintext && copy(k.id, k.keyPlaintext)}
                       title="Copy"
+                      disabled={!canReveal}
                     >
                       {copiedId === k.id ? (
                         <Check className="text-success" />

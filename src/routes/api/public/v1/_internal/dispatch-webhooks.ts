@@ -23,8 +23,8 @@ export const Route = createFileRoute("/api/public/v1/_internal/dispatch-webhooks
         const since = new Date(Date.now() - 5 * 60_000).toISOString().slice(0, 10);
         const { data: newFilings } = await supabaseAdmin
           .from("sec_filings")
-          .select("accession_number,form_type,filing_date,ticker,company_name,cik")
-          .gte("filing_date", since)
+          .select("accession_number,form_type,filed_at,ticker,company_name,cik")
+          .gte("filed_at", since)
           .limit(500);
 
         if (newFilings && newFilings.length > 0) {

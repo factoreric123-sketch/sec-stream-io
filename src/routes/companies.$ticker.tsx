@@ -15,7 +15,7 @@ const getCompany = createServerFn({ method: "GET" })
       .from("sec_filings")
       .select("ticker,company_name,cik")
       .eq("ticker", ticker)
-      .order("filing_date", { ascending: false })
+      .order("filed_at", { ascending: false })
       .limit(1)
       .maybeSingle();
     if (!company) return null;
@@ -23,9 +23,9 @@ const getCompany = createServerFn({ method: "GET" })
     const [{ data: filings }, { data: insider }] = await Promise.all([
       supabaseAdmin
         .from("sec_filings")
-        .select("accession_number,form_type,filing_date,report_date,description,filing_url")
+        .select("accession_number,form_type,filed_at,period_of_report,filing_url")
         .eq("ticker", ticker)
-        .order("filing_date", { ascending: false })
+        .order("filed_at", { ascending: false })
         .limit(10),
       supabaseAdmin
         .from("insider_form4_filings")
@@ -139,7 +139,7 @@ function TickerPage() {
                       <span className="ml-2 text-muted-foreground">{f.accession_number}</span>
                     </div>
                     <span className="font-mono text-xs text-muted-foreground">
-                      {fmtDate(f.filing_date)}
+                      {fmtDate(f.filed_at)}
                     </span>
                   </li>
                 ))}

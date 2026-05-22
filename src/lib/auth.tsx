@@ -11,7 +11,8 @@ export type Profile = {
 
 export type ApiKey = {
   id: string;
-  keyPlaintext: string;
+  /** Only populated for keys just created in this session; null for keys loaded from the database. */
+  keyPlaintext: string | null;
   keyPrefix: string;
   keyLast4: string;
   label: string;
@@ -80,7 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setApiKeys(
       (keys ?? []).map((k) => ({
         id: k.id,
-        keyPlaintext: k.key_plaintext,
+        keyPlaintext: null,
         keyPrefix: k.key_prefix,
         keyLast4: k.key_last4,
         label: k.label,
@@ -140,7 +141,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .from("api_keys")
         .insert({
           user_id: user.id,
-          key_plaintext: newKey,
           key_hash: hash,
           key_prefix: newKey.slice(0, 11),
           key_last4: newKey.slice(-4),
@@ -152,7 +152,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) throw error;
       const created: ApiKey = {
         id: data.id,
-        keyPlaintext: data.key_plaintext,
+        keyPlaintext: newKey,
         keyPrefix: data.key_prefix,
         keyLast4: data.key_last4,
         label: data.label,

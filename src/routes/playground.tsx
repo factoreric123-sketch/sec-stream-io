@@ -66,7 +66,7 @@ function PlaygroundPage() {
     return usable ? `?${usable}` : "";
   }, [params, paramDefs]);
 
-  const keyDisplay = apiKey ? apiKey.keyPlaintext.slice(0, 14) + "..." : "sk_live_demo_...";
+  const keyDisplay = apiKey?.keyPlaintext ? apiKey.keyPlaintext.slice(0, 14) + "..." : `${apiKey?.keyPrefix ?? "sk_live_"}...`;
   const isLive = useLive && !!apiKey && LIVE_ENDPOINTS.has(endpoint);
 
   const curl = `curl https://api.secstream.dev/v1${endpoint}${queryString} \\
