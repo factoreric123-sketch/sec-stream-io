@@ -81,7 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setApiKeys(
       (keys ?? []).map((k) => ({
         id: k.id,
-        keyPlaintext: k.key_plaintext,
+        keyPlaintext: null,
         keyPrefix: k.key_prefix,
         keyLast4: k.key_last4,
         label: k.label,
