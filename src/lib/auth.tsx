@@ -11,7 +11,8 @@ export type Profile = {
 
 export type ApiKey = {
   id: string;
-  keyPlaintext: string;
+  /** Only populated for keys just created in this session; null for keys loaded from the database. */
+  keyPlaintext: string | null;
   keyPrefix: string;
   keyLast4: string;
   label: string;
