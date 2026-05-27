@@ -202,21 +202,21 @@ export function WebhooksPanel({ userId }: { userId: string }) {
                 </div>
                 <div className="mt-2 flex items-center gap-1.5 rounded-md bg-muted/40 px-2 py-1.5">
                   <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Secret</span>
-                  <code className="flex-1 truncate font-mono text-xs">
-                    {revealed[h.id] ? h.secret : "whsec_•••••••••••••••••"}
-                  </code>
-                  <button
-                    className="text-muted-foreground hover:text-foreground"
-                    onClick={() => setRevealed((r) => ({ ...r, [h.id]: !r[h.id] }))}
-                  >
-                    {revealed[h.id] ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-                  </button>
-                  <button
-                    className="text-muted-foreground hover:text-foreground"
-                    onClick={() => copy(h.id, h.secret)}
-                  >
-                    {copied === h.id ? <Check className="h-3 w-3 text-success" /> : <Copy className="h-3 w-3" />}
-                  </button>
+                  {newSecret?.id === h.id ? (
+                    <>
+                      <code className="flex-1 truncate font-mono text-xs">{newSecret.secret}</code>
+                      <button
+                        className="text-muted-foreground hover:text-foreground"
+                        onClick={() => copy(h.id, newSecret.secret)}
+                      >
+                        {copied === h.id ? <Check className="h-3 w-3 text-success" /> : <Copy className="h-3 w-3" />}
+                      </button>
+                    </>
+                  ) : (
+                    <code className="flex-1 truncate font-mono text-xs text-muted-foreground">
+                      whsec_•••••••••••• (shown once at creation)
+                    </code>
+                  )}
                 </div>
               </div>
             ))}
