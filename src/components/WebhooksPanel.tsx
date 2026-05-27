@@ -36,7 +36,7 @@ export function WebhooksPanel({ userId }: { userId: string }) {
   const [label, setLabel] = useState("");
   const [ticker, setTicker] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [revealed, setRevealed] = useState<Record<string, boolean>>({});
+  const [newSecret, setNewSecret] = useState<{ id: string; secret: string } | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
 
   const reload = useCallback(async () => {
