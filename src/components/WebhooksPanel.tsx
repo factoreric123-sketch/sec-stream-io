@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 type Hook = {
   id: string;
   url: string;
-  secret: string;
   label: string;
   active: boolean;
   events: string[];
