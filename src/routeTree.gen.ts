@@ -168,8 +168,8 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/status': typeof StatusRoute
   '/companies/$ticker': typeof CompaniesTickerRoute
-  '/docs/sdk': typeof DocsSdkRoute
   '/docs/schema': typeof DocsSchemaRoute
+  '/docs/sdk': typeof DocsSdkRoute
   '/examples/$slug': typeof ExamplesSlugRoute
   '/vs/$competitor': typeof VsCompetitorRoute
   '/api/public/v1/clusters': typeof ApiPublicV1ClustersRoute
@@ -194,8 +194,8 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/status': typeof StatusRoute
   '/companies/$ticker': typeof CompaniesTickerRoute
-  '/docs/sdk': typeof DocsSdkRoute
   '/docs/schema': typeof DocsSchemaRoute
+  '/docs/sdk': typeof DocsSdkRoute
   '/examples/$slug': typeof ExamplesSlugRoute
   '/vs/$competitor': typeof VsCompetitorRoute
   '/api/public/v1/clusters': typeof ApiPublicV1ClustersRoute
@@ -221,8 +221,8 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/status': typeof StatusRoute
   '/companies/$ticker': typeof CompaniesTickerRoute
-  '/docs/sdk': typeof DocsSdkRoute
   '/docs/schema': typeof DocsSchemaRoute
+  '/docs/sdk': typeof DocsSdkRoute
   '/examples/$slug': typeof ExamplesSlugRoute
   '/vs/$competitor': typeof VsCompetitorRoute
   '/api/public/v1/clusters': typeof ApiPublicV1ClustersRoute
@@ -249,8 +249,8 @@ export interface FileRouteTypes {
     | '/signup'
     | '/status'
     | '/companies/$ticker'
-    | '/docs/sdk'
     | '/docs/schema'
+    | '/docs/sdk'
     | '/examples/$slug'
     | '/vs/$competitor'
     | '/api/public/v1/clusters'
@@ -275,8 +275,8 @@ export interface FileRouteTypes {
     | '/signup'
     | '/status'
     | '/companies/$ticker'
-    | '/docs/sdk'
     | '/docs/schema'
+    | '/docs/sdk'
     | '/examples/$slug'
     | '/vs/$competitor'
     | '/api/public/v1/clusters'
@@ -301,8 +301,8 @@ export interface FileRouteTypes {
     | '/signup'
     | '/status'
     | '/companies/$ticker'
-    | '/docs/sdk'
     | '/docs/schema'
+    | '/docs/sdk'
     | '/examples/$slug'
     | '/vs/$competitor'
     | '/api/public/v1/clusters'
@@ -513,13 +513,13 @@ declare module '@tanstack/react-router' {
 }
 
 interface DocsRouteChildren {
-  DocsSdkRoute: typeof DocsSdkRoute
   DocsSchemaRoute: typeof DocsSchemaRoute
+  DocsSdkRoute: typeof DocsSdkRoute
 }
 
 const DocsRouteChildren: DocsRouteChildren = {
-  DocsSdkRoute: DocsSdkRoute,
   DocsSchemaRoute: DocsSchemaRoute,
+  DocsSdkRoute: DocsSdkRoute,
 }
 
 const DocsRouteWithChildren = DocsRoute._addFileChildren(DocsRouteChildren)
@@ -573,3 +573,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
