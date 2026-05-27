@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
-import { Plus, Trash2, Webhook, Eye, EyeOff, Copy, Check } from "lucide-react";
+import { Plus, Trash2, Webhook, Copy, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 
 type Hook = {
   id: string;
   url: string;
-  secret: string;
   label: string;
   active: boolean;
   events: string[];
@@ -37,7 +36,7 @@ export function WebhooksPanel({ userId }: { userId: string }) {
   const [label, setLabel] = useState("");
   const [ticker, setTicker] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [revealed, setRevealed] = useState<Record<string, boolean>>({});
+  const [newSecret, setNewSecret] = useState<{ id: string; secret: string } | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
 
   const reload = useCallback(async () => {
@@ -70,18 +69,23 @@ export function WebhooksPanel({ userId }: { userId: string }) {
       return;
     }
     const secret = genSecret();
-    const { error: e } = await supabase.from("webhooks").insert({
-      user_id: userId,
-      url,
-      secret,
-      label: label.trim() || "Default",
-      events: ["filing.created"],
-      active: true,
-    });
+    const { data, error: e } = await supabase
+      .from("webhooks")
+      .insert({
+        user_id: userId,
+        url,
+        secret,
+        label: label.trim() || "Default",
+        events: ["filing.created"],
+        active: true,
+      })
+      .select("id")
+      .single();
     if (e) {
       setError(e.message);
       return;
     }
+    if (data?.id) setNewSecret({ id: data.id, secret });
     setUrl("");
     setLabel("");
     reload();
@@ -198,21 +202,21 @@ export function WebhooksPanel({ userId }: { userId: string }) {
                 </div>
                 <div className="mt-2 flex items-center gap-1.5 rounded-md bg-muted/40 px-2 py-1.5">
                   <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Secret</span>
-                  <code className="flex-1 truncate font-mono text-xs">
-                    {revealed[h.id] ? h.secret : "whsec_•••••••••••••••••"}
-                  </code>
-                  <button
-                    className="text-muted-foreground hover:text-foreground"
-                    onClick={() => setRevealed((r) => ({ ...r, [h.id]: !r[h.id] }))}
-                  >
-                    {revealed[h.id] ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-                  </button>
-                  <button
-                    className="text-muted-foreground hover:text-foreground"
-                    onClick={() => copy(h.id, h.secret)}
-                  >
-                    {copied === h.id ? <Check className="h-3 w-3 text-success" /> : <Copy className="h-3 w-3" />}
-                  </button>
+                  {newSecret?.id === h.id ? (
+                    <>
+                      <code className="flex-1 truncate font-mono text-xs">{newSecret.secret}</code>
+                      <button
+                        className="text-muted-foreground hover:text-foreground"
+                        onClick={() => copy(h.id, newSecret.secret)}
+                      >
+                        {copied === h.id ? <Check className="h-3 w-3 text-success" /> : <Copy className="h-3 w-3" />}
+                      </button>
+                    </>
+                  ) : (
+                    <code className="flex-1 truncate font-mono text-xs text-muted-foreground">
+                      whsec_•••••••••••• (shown once at creation)
+                    </code>
+                  )}
                 </div>
               </div>
             ))}
