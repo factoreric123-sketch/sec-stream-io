@@ -69,18 +69,23 @@ export function WebhooksPanel({ userId }: { userId: string }) {
       return;
     }
     const secret = genSecret();
-    const { error: e } = await supabase.from("webhooks").insert({
-      user_id: userId,
-      url,
-      secret,
-      label: label.trim() || "Default",
-      events: ["filing.created"],
-      active: true,
-    });
+    const { data, error: e } = await supabase
+      .from("webhooks")
+      .insert({
+        user_id: userId,
+        url,
+        secret,
+        label: label.trim() || "Default",
+        events: ["filing.created"],
+        active: true,
+      })
+      .select("id")
+      .single();
     if (e) {
       setError(e.message);
       return;
     }
+    if (data?.id) setNewSecret({ id: data.id, secret });
     setUrl("");
     setLabel("");
     reload();
