@@ -353,6 +353,7 @@ export type Database = {
           cik: string | null
           company_name: string | null
           created_at: string | null
+          delta_own_pct: number | null
           document_format_files: Json | null
           entities: Json | null
           exchange: string | null
@@ -368,21 +369,31 @@ export type Database = {
           insider_title: string | null
           is_10b5_1_plan: boolean | null
           is_amendment: boolean | null
+          is_default_event: boolean | null
           is_director: boolean | null
+          is_earnings_release: boolean | null
+          is_exec_change: boolean | null
           is_group_filing: boolean | null
+          is_ma_event: boolean | null
           is_officer: boolean | null
+          is_restatement: boolean | null
           is_ten_percent_owner: boolean | null
-          is_xbrl: boolean | null
           items: string[] | null
-          link_to_txt: string | null
           no_longer_section_16: boolean | null
           original_currency: string | null
           period_of_report: string | null
+          press_release_url: string | null
+          price_per_share: number | null
           primary_document: string | null
+          shares_owned_after: number | null
+          shares_qty: number | null
           sic_code: string | null
           state_of_incorporation: string | null
           ticker: string | null
           total_transaction_value: number | null
+          trade_date: string | null
+          trade_type: string | null
+          transaction_count: number | null
           transactions: Json | null
         }
         Insert: {
@@ -390,6 +401,7 @@ export type Database = {
           cik?: string | null
           company_name?: string | null
           created_at?: string | null
+          delta_own_pct?: number | null
           document_format_files?: Json | null
           entities?: Json | null
           exchange?: string | null
@@ -405,21 +417,31 @@ export type Database = {
           insider_title?: string | null
           is_10b5_1_plan?: boolean | null
           is_amendment?: boolean | null
+          is_default_event?: boolean | null
           is_director?: boolean | null
+          is_earnings_release?: boolean | null
+          is_exec_change?: boolean | null
           is_group_filing?: boolean | null
+          is_ma_event?: boolean | null
           is_officer?: boolean | null
+          is_restatement?: boolean | null
           is_ten_percent_owner?: boolean | null
-          is_xbrl?: boolean | null
           items?: string[] | null
-          link_to_txt?: string | null
           no_longer_section_16?: boolean | null
           original_currency?: string | null
           period_of_report?: string | null
+          press_release_url?: string | null
+          price_per_share?: number | null
           primary_document?: string | null
+          shares_owned_after?: number | null
+          shares_qty?: number | null
           sic_code?: string | null
           state_of_incorporation?: string | null
           ticker?: string | null
           total_transaction_value?: number | null
+          trade_date?: string | null
+          trade_type?: string | null
+          transaction_count?: number | null
           transactions?: Json | null
         }
         Update: {
@@ -427,6 +449,7 @@ export type Database = {
           cik?: string | null
           company_name?: string | null
           created_at?: string | null
+          delta_own_pct?: number | null
           document_format_files?: Json | null
           entities?: Json | null
           exchange?: string | null
@@ -442,21 +465,31 @@ export type Database = {
           insider_title?: string | null
           is_10b5_1_plan?: boolean | null
           is_amendment?: boolean | null
+          is_default_event?: boolean | null
           is_director?: boolean | null
+          is_earnings_release?: boolean | null
+          is_exec_change?: boolean | null
           is_group_filing?: boolean | null
+          is_ma_event?: boolean | null
           is_officer?: boolean | null
+          is_restatement?: boolean | null
           is_ten_percent_owner?: boolean | null
-          is_xbrl?: boolean | null
           items?: string[] | null
-          link_to_txt?: string | null
           no_longer_section_16?: boolean | null
           original_currency?: string | null
           period_of_report?: string | null
+          press_release_url?: string | null
+          price_per_share?: number | null
           primary_document?: string | null
+          shares_owned_after?: number | null
+          shares_qty?: number | null
           sic_code?: string | null
           state_of_incorporation?: string | null
           ticker?: string | null
           total_transaction_value?: number | null
+          trade_date?: string | null
+          trade_type?: string | null
+          transaction_count?: number | null
           transactions?: Json | null
         }
         Relationships: []
