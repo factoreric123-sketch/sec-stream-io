@@ -1,6 +1,10 @@
-# Stripe Billing — Setup Guide
+# Stripe Billing + Freemium — Setup Guide
 
-What's shipped in this commit, what you need to configure, and the exact dashboard wiring needed for the "Manage billing" button.
+What's shipped, what you need to configure, and the exact wiring for the dashboard.
+
+**Model:** new signups → `plan='free'` with **10 lifetime API calls**. After that → 402
+Payment Required with an `upgrade_url`. Upgrade → Stripe Checkout → webhook flips `plan='active'`
+→ unlimited.
 
 ---
 
@@ -97,9 +101,15 @@ I can't edit `src/routes/dashboard.tsx` directly. The existing `AccountPanel` (a
 Replace it with this. If `plan === 'active'` show the Manage button; otherwise show Subscribe.
 
 ```tsx
-function AccountPanel({ plan, renewalDate, email }: { plan: string; renewalDate: string; email: string }) {
-  // ... existing code unchanged ...
-
+function AccountPanel({
+  plan, renewalDate, email, lifetimeUsed, freeQuota,
+}: {
+  plan: string;
+  renewalDate: string | null;
+  email: string;
+  lifetimeUsed: number;
+  freeQuota: number;
+}) {
   const handleManage = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
@@ -112,7 +122,7 @@ function AccountPanel({ plan, renewalDate, email }: { plan: string; renewalDate:
     else alert(error ?? "Could not open billing portal");
   };
 
-  const handleSubscribe = async () => {
+  const handleUpgrade = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
     const res = await fetch("/api/public/stripe-checkout", {
@@ -124,17 +134,54 @@ function AccountPanel({ plan, renewalDate, email }: { plan: string; renewalDate:
     else alert(error ?? "Could not start checkout");
   };
 
+  const isActive = plan === "active";
+  const isFree   = plan === "free";
+  const remaining = Math.max(freeQuota - lifetimeUsed, 0);
+
   return (
     <Card title="Account">
-      {/* ... existing dl block unchanged ... */}
-      {plan === "active" ? (
+      <dl className="space-y-4 text-sm">
+        <Row label="Email" value={<span className="font-mono text-xs">{email}</span>} />
+        <Row
+          label="Plan"
+          value={
+            <span className={isActive ? "text-success" : isFree ? "text-muted-foreground" : "text-destructive"}>
+              {isActive ? "Premium" : isFree ? "Free" : plan}
+            </span>
+          }
+        />
+        {isFree && (
+          <Row
+            label="Usage"
+            value={<span className="font-mono text-xs">{lifetimeUsed} / {freeQuota} calls</span>}
+          />
+        )}
+        {isActive && renewalDate && (
+          <Row label="Renews" value={new Date(renewalDate).toLocaleDateString()} />
+        )}
+      </dl>
+
+      {isActive ? (
         <Button variant="outline" size="sm" className="mt-6 w-full" onClick={handleManage}>
           Manage billing
         </Button>
       ) : (
-        <Button size="sm" className="mt-6 w-full" onClick={handleSubscribe}>
-          Subscribe — $10/mo
-        </Button>
+        <>
+          {isFree && remaining > 0 && (
+            <p className="mt-4 text-xs text-muted-foreground">
+              {remaining} free {remaining === 1 ? "call" : "calls"} remaining.
+              Upgrade for unlimited access.
+            </p>
+          )}
+          {isFree && remaining === 0 && (
+            <p className="mt-4 text-xs text-destructive">
+              Free quota exhausted. Upgrade to continue using the API.
+            </p>
+          )}
+          <Button size="sm" className="mt-4 w-full" onClick={handleUpgrade}>
+            Upgrade to Premium — $10/mo
+          </Button>
+        </>
       )}
     </Card>
   );
@@ -144,18 +191,112 @@ function AccountPanel({ plan, renewalDate, email }: { plan: string; renewalDate:
 Make sure `supabase` is imported at the top of the file (it already should be —
 `import { supabase } from "@/integrations/supabase/client"`).
 
+You'll also need to surface `lifetimeUsed` and `freeQuota` to this component.
+Update the auth context (`src/lib/auth.tsx`) to load these alongside the existing
+`plan` and `renewal_date`. Quick SQL:
+
+```ts
+const { data: profile } = await supabase
+  .from("profiles")
+  .select("email, plan, renewal_date, lifetime_request_count, free_quota")
+  .eq("id", user.id)
+  .single();
+```
+
+Then pass `profile.lifetime_request_count` and `profile.free_quota` into `<AccountPanel>`.
+
 ---
 
-## Step 8 — Test the flow
+## Step 8 — Wire the quota check into the API auth pipeline
 
-1. Sign up a fresh test account.
-2. Click **Subscribe — $10/mo** → redirected to Stripe Checkout.
-3. Pay with a real card (you said live mode).
-4. On success → bounced back to `/dashboard?subscribed=1`.
-5. Within a few seconds, Stripe fires `checkout.session.completed` → webhook → `profiles.plan = 'active'`.
-6. Refresh dashboard → button now reads **Manage billing**.
-7. Click **Manage billing** → Stripe Customer Portal opens.
-8. Cancel from the portal → Stripe fires `customer.subscription.deleted` → `plan = 'canceled'`.
+You'll need TWO edits to `src/server/apiAuth.server.ts` (I can't edit that
+file directly due to system restrictions — apply by hand).
+
+### 8a. Allow `plan='free'` through the plan check
+
+The existing `isPlanActive` only accepts `plan='active'`, which would block
+free users entirely. Change it to also let free users pass — the quota
+check (next step) will gate them.
+
+**Find this function:**
+```ts
+function isPlanActive(plan: string, renewalDate: string | null): boolean {
+  if (plan === "active") return true;
+  if (renewalDate && new Date(renewalDate).getTime() > Date.now()) return true;
+  return false;
+}
+```
+
+**Replace with:**
+```ts
+function isPlanActive(plan: string, renewalDate: string | null): boolean {
+  if (plan === "active") return true;
+  if (plan === "free")   return true;   // free users gated by quota, not plan
+  if (renewalDate && new Date(renewalDate).getTime() > Date.now()) return true;
+  return false;
+}
+```
+
+### 8b. Add the quota check
+
+The migration adds an atomic `consume_quota` RPC. The new helper
+`src/server/quota.server.ts` calls it.
+
+**In `apiAuth.server.ts`, inside `handlePublicApi`, AFTER the plan-active
+check (and after the scope check), BEFORE the rate-limit block, add:**
+
+```ts
+import { consumeQuota, quotaExhaustedResponse } from "./quota.server";
+
+// ... existing plan + scope checks ...
+
+// 2c. Free-tier quota enforcement.
+const quota = await consumeQuota(auth.user_id);
+if (quota && quota.plan === "free" && quota.new_count > quota.free_quota) {
+  const latency = Date.now() - start;
+  await logUsage(auth, endpoint, 402, latency);
+  return jsonResponse(
+    quotaExhaustedResponse(quota),
+    402,
+    { ...baseHeaders, "X-Response-Time-Ms": String(latency) },
+  );
+}
+```
+
+`consumeQuota` increments the counter atomically. The 402 is only returned
+when `plan === 'free'` AND the count is over quota — paid users still get
+their counter incremented (for analytics) but skip the gate.
+
+---
+
+## Step 9 — Test the flow
+
+1. Sign up a fresh test account → profile created with `plan='free'`, `lifetime_request_count=0`, `free_quota=10`.
+2. Dashboard shows **Plan: Free** and **Usage: 0 / 10 calls** plus **Upgrade to Premium — $10/mo** button.
+3. Make 10 API calls with the new key → each one increments the counter and succeeds.
+4. The 11th call returns:
+   ```json
+   {
+     "error": {
+       "code": "upgrade_required",
+       "message": "Free-tier quota of 10 requests exceeded...",
+       "details": {
+         "used": 11,
+         "quota": 10,
+         "plan": "free",
+         "upgrade_url": "https://sec-stream-io.lovable.app/dashboard?upgrade=1"
+       }
+     }
+   }
+   ```
+   (HTTP 402 Payment Required.)
+5. Click **Upgrade to Premium** → redirected to Stripe Checkout.
+6. Pay with a real card.
+7. On success → bounced back to `/dashboard?subscribed=1`.
+8. Within a few seconds, Stripe fires `checkout.session.completed` → webhook → `plan='active'`.
+9. Refresh dashboard → button now reads **Manage billing**. API works again.
+10. Click **Manage billing** → Stripe Customer Portal opens.
+11. Cancel from the portal → Stripe fires `customer.subscription.deleted` → `plan='canceled'` → API 402s again until they re-subscribe.
 
 ---
 
