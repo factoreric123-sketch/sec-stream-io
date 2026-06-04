@@ -19,14 +19,14 @@ import { CodeBlock } from "@/components/CodeBlock";
 import { WebhooksPanel } from "@/components/WebhooksPanel";
 import { OnboardingWizard } from "@/components/OnboardingWizard";
 import { isAdmin } from "@/lib/admin";
-import { useServerFn } from "@tanstack/react-start";
-import { createProCheckout } from "@/lib/stripe.functions";
 import { toast } from "sonner";
 
 function UpgradeButton({ plan }: { plan: string }) {
-  const checkout = useServerFn(createProCheckout);
   const [loading, setLoading] = useState(false);
   const isActive = plan === "active";
+  const endpoint = isActive
+    ? "/api/public/v1/billing/portal"
+    : "/api/public/stripe-checkout";
   return (
     <Button
       variant={isActive ? "outline" : "default"}
@@ -36,10 +36,23 @@ function UpgradeButton({ plan }: { plan: string }) {
       onClick={async () => {
         try {
           setLoading(true);
-          const { url } = await checkout({});
-          window.location.href = url;
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session) {
+            toast.error("You must be signed in.");
+            setLoading(false);
+            return;
+          }
+          const res = await fetch(endpoint, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${session.access_token}` },
+          });
+          const body = (await res.json()) as { url?: string; error?: string };
+          if (!res.ok || !body.url) {
+            throw new Error(body.error ?? `Request failed (${res.status})`);
+          }
+          window.location.href = body.url;
         } catch (e) {
-          toast.error(e instanceof Error ? e.message : "Could not start checkout");
+          toast.error(e instanceof Error ? e.message : "Something went wrong");
           setLoading(false);
         }
       }}
