@@ -19,6 +19,36 @@ import { CodeBlock } from "@/components/CodeBlock";
 import { WebhooksPanel } from "@/components/WebhooksPanel";
 import { OnboardingWizard } from "@/components/OnboardingWizard";
 import { isAdmin } from "@/lib/admin";
+import { useServerFn } from "@tanstack/react-start";
+import { createProCheckout } from "@/lib/stripe.functions";
+import { toast } from "sonner";
+
+function UpgradeButton({ plan }: { plan: string }) {
+  const checkout = useServerFn(createProCheckout);
+  const [loading, setLoading] = useState(false);
+  const isActive = plan === "active";
+  return (
+    <Button
+      variant={isActive ? "outline" : "default"}
+      size="sm"
+      className="mt-6 w-full"
+      disabled={loading}
+      onClick={async () => {
+        try {
+          setLoading(true);
+          const { url } = await checkout({});
+          window.location.href = url;
+        } catch (e) {
+          toast.error(e instanceof Error ? e.message : "Could not start checkout");
+          setLoading(false);
+        }
+      }}
+    >
+      {loading ? "Redirecting…" : isActive ? "Manage subscription" : "Upgrade to Pro — $10/mo"}
+    </Button>
+  );
+}
+
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardPage,
