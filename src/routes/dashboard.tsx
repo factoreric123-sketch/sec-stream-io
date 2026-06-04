@@ -684,9 +684,8 @@ function AccountPanel({ plan, renewalDate, email }: { plan: string; renewalDate:
         <Row label="Plan" value="$10 / month" />
         <Row label="Renews" value={renewal} />
       </dl>
-      <Button variant="outline" size="sm" className="mt-6 w-full" disabled>
-        Manage billing (coming soon)
-      </Button>
+      <UpgradeButton plan={plan} />
+
     </Card>
   );
 }
