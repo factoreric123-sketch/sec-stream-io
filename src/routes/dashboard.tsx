@@ -19,8 +19,6 @@ import { CodeBlock } from "@/components/CodeBlock";
 import { WebhooksPanel } from "@/components/WebhooksPanel";
 import { OnboardingWizard } from "@/components/OnboardingWizard";
 import { isAdmin } from "@/lib/admin";
-import { useServerFn } from "@tanstack/react-start";
-import { createProCheckout } from "@/lib/stripe.functions";
 import { toast } from "sonner";
 
 function UpgradeButton({ plan }: { plan: string }) {
