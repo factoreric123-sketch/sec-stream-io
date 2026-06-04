@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { isAdmin, ADMIN_EMAILS } from "@/lib/admin";
 import { supabase } from "@/integrations/supabase/client";
-import { getAdminStats } from "@/server/admin.functions";
+import { getAdminStats } from "@/lib/admin.functions";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 
