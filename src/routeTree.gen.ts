@@ -24,6 +24,8 @@ import { Route as ExamplesSlugRouteImport } from './routes/examples.$slug'
 import { Route as DocsSdkRouteImport } from './routes/docs.sdk'
 import { Route as DocsSchemaRouteImport } from './routes/docs.schema'
 import { Route as CompaniesTickerRouteImport } from './routes/companies.$ticker'
+import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe-webhook'
+import { Route as ApiPublicStripeCheckoutRouteImport } from './routes/api/public/stripe-checkout'
 import { Route as ApiPublicV1SearchRouteImport } from './routes/api/public/v1/search'
 import { Route as ApiPublicV1QuoteRouteImport } from './routes/api/public/v1/quote'
 import { Route as ApiPublicV1InsiderRouteImport } from './routes/api/public/v1/insider'
@@ -33,8 +35,6 @@ import { Route as ApiPublicV1CompanyRouteImport } from './routes/api/public/v1/c
 import { Route as ApiPublicV1ClustersRouteImport } from './routes/api/public/v1/clusters'
 import { Route as ApiPublicV1FilingsBatchRouteImport } from './routes/api/public/v1/filings.batch'
 import { Route as ApiPublicV1BillingPortalRouteImport } from './routes/api/public/v1/billing/portal'
-import { Route as ApiPublicStripeCheckoutRouteImport } from './routes/api/public/stripe-checkout'
-import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe-webhook'
 import { Route as ApiPublicV1InternalDispatchWebhooksRouteImport } from './routes/api/public/v1/_internal/dispatch-webhooks'
 
 const StatusRoute = StatusRouteImport.update({
@@ -112,6 +112,16 @@ const CompaniesTickerRoute = CompaniesTickerRouteImport.update({
   path: '/companies/$ticker',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
+  id: '/api/public/stripe-webhook',
+  path: '/api/public/stripe-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicStripeCheckoutRoute = ApiPublicStripeCheckoutRouteImport.update({
+  id: '/api/public/stripe-checkout',
+  path: '/api/public/stripe-checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicV1SearchRoute = ApiPublicV1SearchRouteImport.update({
   id: '/api/public/v1/search',
   path: '/api/public/v1/search',
@@ -152,21 +162,12 @@ const ApiPublicV1FilingsBatchRoute = ApiPublicV1FilingsBatchRouteImport.update({
   path: '/batch',
   getParentRoute: () => ApiPublicV1FilingsRoute,
 } as any)
-const ApiPublicV1BillingPortalRoute = ApiPublicV1BillingPortalRouteImport.update({
-  id: '/api/public/v1/billing/portal',
-  path: '/api/public/v1/billing/portal',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicStripeCheckoutRoute = ApiPublicStripeCheckoutRouteImport.update({
-  id: '/api/public/stripe-checkout',
-  path: '/api/public/stripe-checkout',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
-  id: '/api/public/stripe-webhook',
-  path: '/api/public/stripe-webhook',
-  getParentRoute: () => rootRouteImport,
-} as any)
+const ApiPublicV1BillingPortalRoute =
+  ApiPublicV1BillingPortalRouteImport.update({
+    id: '/api/public/v1/billing/portal',
+    path: '/api/public/v1/billing/portal',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicV1InternalDispatchWebhooksRoute =
   ApiPublicV1InternalDispatchWebhooksRouteImport.update({
     id: '/api/public/v1/_internal/dispatch-webhooks',
@@ -190,6 +191,8 @@ export interface FileRoutesByFullPath {
   '/docs/sdk': typeof DocsSdkRoute
   '/examples/$slug': typeof ExamplesSlugRoute
   '/vs/$competitor': typeof VsCompetitorRoute
+  '/api/public/stripe-checkout': typeof ApiPublicStripeCheckoutRoute
+  '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/public/v1/clusters': typeof ApiPublicV1ClustersRoute
   '/api/public/v1/company': typeof ApiPublicV1CompanyRoute
   '/api/public/v1/filings': typeof ApiPublicV1FilingsRouteWithChildren
@@ -198,10 +201,8 @@ export interface FileRoutesByFullPath {
   '/api/public/v1/quote': typeof ApiPublicV1QuoteRoute
   '/api/public/v1/search': typeof ApiPublicV1SearchRoute
   '/api/public/v1/dispatch-webhooks': typeof ApiPublicV1InternalDispatchWebhooksRoute
-  '/api/public/v1/filings/batch': typeof ApiPublicV1FilingsBatchRoute
-  '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
-  '/api/public/stripe-checkout': typeof ApiPublicStripeCheckoutRoute
   '/api/public/v1/billing/portal': typeof ApiPublicV1BillingPortalRoute
+  '/api/public/v1/filings/batch': typeof ApiPublicV1FilingsBatchRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -219,6 +220,8 @@ export interface FileRoutesByTo {
   '/docs/sdk': typeof DocsSdkRoute
   '/examples/$slug': typeof ExamplesSlugRoute
   '/vs/$competitor': typeof VsCompetitorRoute
+  '/api/public/stripe-checkout': typeof ApiPublicStripeCheckoutRoute
+  '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/public/v1/clusters': typeof ApiPublicV1ClustersRoute
   '/api/public/v1/company': typeof ApiPublicV1CompanyRoute
   '/api/public/v1/filings': typeof ApiPublicV1FilingsRouteWithChildren
@@ -227,10 +230,8 @@ export interface FileRoutesByTo {
   '/api/public/v1/quote': typeof ApiPublicV1QuoteRoute
   '/api/public/v1/search': typeof ApiPublicV1SearchRoute
   '/api/public/v1/dispatch-webhooks': typeof ApiPublicV1InternalDispatchWebhooksRoute
-  '/api/public/v1/filings/batch': typeof ApiPublicV1FilingsBatchRoute
-  '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
-  '/api/public/stripe-checkout': typeof ApiPublicStripeCheckoutRoute
   '/api/public/v1/billing/portal': typeof ApiPublicV1BillingPortalRoute
+  '/api/public/v1/filings/batch': typeof ApiPublicV1FilingsBatchRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -249,6 +250,8 @@ export interface FileRoutesById {
   '/docs/sdk': typeof DocsSdkRoute
   '/examples/$slug': typeof ExamplesSlugRoute
   '/vs/$competitor': typeof VsCompetitorRoute
+  '/api/public/stripe-checkout': typeof ApiPublicStripeCheckoutRoute
+  '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/public/v1/clusters': typeof ApiPublicV1ClustersRoute
   '/api/public/v1/company': typeof ApiPublicV1CompanyRoute
   '/api/public/v1/filings': typeof ApiPublicV1FilingsRouteWithChildren
@@ -257,10 +260,8 @@ export interface FileRoutesById {
   '/api/public/v1/quote': typeof ApiPublicV1QuoteRoute
   '/api/public/v1/search': typeof ApiPublicV1SearchRoute
   '/api/public/v1/_internal/dispatch-webhooks': typeof ApiPublicV1InternalDispatchWebhooksRoute
-  '/api/public/v1/filings/batch': typeof ApiPublicV1FilingsBatchRoute
-  '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
-  '/api/public/stripe-checkout': typeof ApiPublicStripeCheckoutRoute
   '/api/public/v1/billing/portal': typeof ApiPublicV1BillingPortalRoute
+  '/api/public/v1/filings/batch': typeof ApiPublicV1FilingsBatchRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -280,6 +281,8 @@ export interface FileRouteTypes {
     | '/docs/sdk'
     | '/examples/$slug'
     | '/vs/$competitor'
+    | '/api/public/stripe-checkout'
+    | '/api/public/stripe-webhook'
     | '/api/public/v1/clusters'
     | '/api/public/v1/company'
     | '/api/public/v1/filings'
@@ -288,10 +291,8 @@ export interface FileRouteTypes {
     | '/api/public/v1/quote'
     | '/api/public/v1/search'
     | '/api/public/v1/dispatch-webhooks'
-    | '/api/public/v1/filings/batch'
-    | '/api/public/stripe-webhook'
-    | '/api/public/stripe-checkout'
     | '/api/public/v1/billing/portal'
+    | '/api/public/v1/filings/batch'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -309,6 +310,8 @@ export interface FileRouteTypes {
     | '/docs/sdk'
     | '/examples/$slug'
     | '/vs/$competitor'
+    | '/api/public/stripe-checkout'
+    | '/api/public/stripe-webhook'
     | '/api/public/v1/clusters'
     | '/api/public/v1/company'
     | '/api/public/v1/filings'
@@ -317,10 +320,8 @@ export interface FileRouteTypes {
     | '/api/public/v1/quote'
     | '/api/public/v1/search'
     | '/api/public/v1/dispatch-webhooks'
-    | '/api/public/v1/filings/batch'
-    | '/api/public/stripe-webhook'
-    | '/api/public/stripe-checkout'
     | '/api/public/v1/billing/portal'
+    | '/api/public/v1/filings/batch'
   id:
     | '__root__'
     | '/'
@@ -338,6 +339,8 @@ export interface FileRouteTypes {
     | '/docs/sdk'
     | '/examples/$slug'
     | '/vs/$competitor'
+    | '/api/public/stripe-checkout'
+    | '/api/public/stripe-webhook'
     | '/api/public/v1/clusters'
     | '/api/public/v1/company'
     | '/api/public/v1/filings'
@@ -346,10 +349,8 @@ export interface FileRouteTypes {
     | '/api/public/v1/quote'
     | '/api/public/v1/search'
     | '/api/public/v1/_internal/dispatch-webhooks'
-    | '/api/public/v1/filings/batch'
-    | '/api/public/stripe-webhook'
-    | '/api/public/stripe-checkout'
     | '/api/public/v1/billing/portal'
+    | '/api/public/v1/filings/batch'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -365,6 +366,8 @@ export interface RootRouteChildren {
   StatusRoute: typeof StatusRoute
   CompaniesTickerRoute: typeof CompaniesTickerRoute
   VsCompetitorRoute: typeof VsCompetitorRoute
+  ApiPublicStripeCheckoutRoute: typeof ApiPublicStripeCheckoutRoute
+  ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
   ApiPublicV1ClustersRoute: typeof ApiPublicV1ClustersRoute
   ApiPublicV1CompanyRoute: typeof ApiPublicV1CompanyRoute
   ApiPublicV1FilingsRoute: typeof ApiPublicV1FilingsRouteWithChildren
@@ -373,8 +376,6 @@ export interface RootRouteChildren {
   ApiPublicV1QuoteRoute: typeof ApiPublicV1QuoteRoute
   ApiPublicV1SearchRoute: typeof ApiPublicV1SearchRoute
   ApiPublicV1InternalDispatchWebhooksRoute: typeof ApiPublicV1InternalDispatchWebhooksRoute
-  ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
-  ApiPublicStripeCheckoutRoute: typeof ApiPublicStripeCheckoutRoute
   ApiPublicV1BillingPortalRoute: typeof ApiPublicV1BillingPortalRoute
 }
 
@@ -485,6 +486,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CompaniesTickerRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/stripe-webhook': {
+      id: '/api/public/stripe-webhook'
+      path: '/api/public/stripe-webhook'
+      fullPath: '/api/public/stripe-webhook'
+      preLoaderRoute: typeof ApiPublicStripeWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/stripe-checkout': {
+      id: '/api/public/stripe-checkout'
+      path: '/api/public/stripe-checkout'
+      fullPath: '/api/public/stripe-checkout'
+      preLoaderRoute: typeof ApiPublicStripeCheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/v1/search': {
       id: '/api/public/v1/search'
       path: '/api/public/v1/search'
@@ -541,32 +556,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicV1FilingsBatchRouteImport
       parentRoute: typeof ApiPublicV1FilingsRoute
     }
-    '/api/public/v1/_internal/dispatch-webhooks': {
-      id: '/api/public/v1/_internal/dispatch-webhooks'
-      path: '/api/public/v1/dispatch-webhooks'
-      fullPath: '/api/public/v1/dispatch-webhooks'
-      preLoaderRoute: typeof ApiPublicV1InternalDispatchWebhooksRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/stripe-webhook': {
-      id: '/api/public/stripe-webhook'
-      path: '/api/public/stripe-webhook'
-      fullPath: '/api/public/stripe-webhook'
-      preLoaderRoute: typeof ApiPublicStripeWebhookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/stripe-checkout': {
-      id: '/api/public/stripe-checkout'
-      path: '/api/public/stripe-checkout'
-      fullPath: '/api/public/stripe-checkout'
-      preLoaderRoute: typeof ApiPublicStripeCheckoutRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/public/v1/billing/portal': {
       id: '/api/public/v1/billing/portal'
       path: '/api/public/v1/billing/portal'
       fullPath: '/api/public/v1/billing/portal'
       preLoaderRoute: typeof ApiPublicV1BillingPortalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/v1/_internal/dispatch-webhooks': {
+      id: '/api/public/v1/_internal/dispatch-webhooks'
+      path: '/api/public/v1/dispatch-webhooks'
+      fullPath: '/api/public/v1/dispatch-webhooks'
+      preLoaderRoute: typeof ApiPublicV1InternalDispatchWebhooksRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -620,6 +621,8 @@ const rootRouteChildren: RootRouteChildren = {
   StatusRoute: StatusRoute,
   CompaniesTickerRoute: CompaniesTickerRoute,
   VsCompetitorRoute: VsCompetitorRoute,
+  ApiPublicStripeCheckoutRoute: ApiPublicStripeCheckoutRoute,
+  ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
   ApiPublicV1ClustersRoute: ApiPublicV1ClustersRoute,
   ApiPublicV1CompanyRoute: ApiPublicV1CompanyRoute,
   ApiPublicV1FilingsRoute: ApiPublicV1FilingsRouteWithChildren,
@@ -629,10 +632,17 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicV1SearchRoute: ApiPublicV1SearchRoute,
   ApiPublicV1InternalDispatchWebhooksRoute:
     ApiPublicV1InternalDispatchWebhooksRoute,
-  ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
-  ApiPublicStripeCheckoutRoute: ApiPublicStripeCheckoutRoute,
   ApiPublicV1BillingPortalRoute: ApiPublicV1BillingPortalRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
