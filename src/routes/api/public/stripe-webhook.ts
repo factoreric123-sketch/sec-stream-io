@@ -128,7 +128,7 @@ async function onCheckoutCompleted(session: Stripe.Checkout.Session) {
   if (subscriptionId) {
     try {
       const sub = await stripe.subscriptions.retrieve(subscriptionId);
-      renewalDate = toIso(sub.current_period_end);
+      renewalDate = toIso((sub as any).current_period_end ?? (sub as any).items?.data?.[0]?.current_period_end);
     } catch (err) {
       console.error("[stripe-webhook] failed to retrieve subscription", err);
     }
