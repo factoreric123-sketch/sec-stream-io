@@ -28,7 +28,7 @@ const STRIPE_SECRET_KEY     = process.env.STRIPE_SECRET_KEY     ?? "";
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET ?? "";
 
 const stripe = new Stripe(STRIPE_SECRET_KEY, {
-  apiVersion: "2024-06-20",
+  apiVersion: "2026-05-27.dahlia",
 });
 
 export const Route = createFileRoute("/api/public/stripe-webhook")({
