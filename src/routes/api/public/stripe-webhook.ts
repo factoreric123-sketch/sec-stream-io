@@ -155,7 +155,7 @@ async function onSubscriptionChanged(sub: Stripe.Subscription) {
   const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer.id;
 
   const plan = mapSubscriptionStatus(sub.status);
-  const renewalDate = toIso(sub.current_period_end);
+  const renewalDate = toIso((sub as any).current_period_end ?? (sub as any).items?.data?.[0]?.current_period_end);
 
   const { error } = await supabaseAdmin
     .from("profiles")
