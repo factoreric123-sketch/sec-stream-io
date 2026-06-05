@@ -270,28 +270,40 @@ export type Database = {
         Row: {
           created_at: string
           email: string
+          free_quota: number
           id: string
+          lifetime_request_count: number
           plan: string
           rate_limit_per_min: number
           renewal_date: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
           email: string
+          free_quota?: number
           id: string
+          lifetime_request_count?: number
           plan?: string
           rate_limit_per_min?: number
           renewal_date?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
           email?: string
+          free_quota?: number
           id?: string
+          lifetime_request_count?: number
           plan?: string
           rate_limit_per_min?: number
           renewal_date?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -557,6 +569,24 @@ export type Database = {
         }
         Relationships: []
       }
+      stripe_events: {
+        Row: {
+          created_at: string
+          event_id: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          type: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          type?: string
+        }
+        Relationships: []
+      }
       usage_logs: {
         Row: {
           created_at: string
@@ -690,6 +720,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      consume_quota: {
+        Args: { p_user_id: string }
+        Returns: {
+          free_quota: number
+          new_count: number
+          plan: string
+        }[]
+      }
       rate_bucket_incr: {
         Args: { p_bucket: number; p_user: string }
         Returns: number

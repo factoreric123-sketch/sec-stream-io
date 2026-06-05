@@ -28,7 +28,7 @@ const STRIPE_SECRET_KEY     = process.env.STRIPE_SECRET_KEY     ?? "";
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET ?? "";
 
 const stripe = new Stripe(STRIPE_SECRET_KEY, {
-  apiVersion: "2024-06-20",
+  apiVersion: "2026-05-27.dahlia",
 });
 
 export const Route = createFileRoute("/api/public/stripe-webhook")({
@@ -128,7 +128,7 @@ async function onCheckoutCompleted(session: Stripe.Checkout.Session) {
   if (subscriptionId) {
     try {
       const sub = await stripe.subscriptions.retrieve(subscriptionId);
-      renewalDate = toIso(sub.current_period_end);
+      renewalDate = toIso((sub as any).current_period_end ?? (sub as any).items?.data?.[0]?.current_period_end);
     } catch (err) {
       console.error("[stripe-webhook] failed to retrieve subscription", err);
     }
@@ -155,7 +155,7 @@ async function onSubscriptionChanged(sub: Stripe.Subscription) {
   const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer.id;
 
   const plan = mapSubscriptionStatus(sub.status);
-  const renewalDate = toIso(sub.current_period_end);
+  const renewalDate = toIso((sub as any).current_period_end ?? (sub as any).items?.data?.[0]?.current_period_end);
 
   const { error } = await supabaseAdmin
     .from("profiles")
