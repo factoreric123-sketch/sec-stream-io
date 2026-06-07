@@ -75,6 +75,35 @@ function DashboardPage() {
     if (!loading && !user) navigate({ to: "/login" });
   }, [loading, user, navigate]);
 
+  // Post-checkout: poll for webhook to flip plan → 'active', then reload.
+  useEffect(() => {
+    if (typeof window === "undefined" || !user) return;
+    const params = new URLSearchParams(window.location.search);
+    const sub = params.get("subscribed");
+    if (sub === "1") {
+      toast.success("Payment received — activating your subscription…");
+      let tries = 0;
+      const iv = setInterval(async () => {
+        tries++;
+        const { data } = await supabase
+          .from("profiles")
+          .select("plan")
+          .eq("id", user.id)
+          .maybeSingle();
+        if (data?.plan === "active" || tries > 15) {
+          clearInterval(iv);
+          window.history.replaceState({}, "", "/dashboard");
+          if (data?.plan === "active") window.location.reload();
+        }
+      }, 2000);
+      return () => clearInterval(iv);
+    }
+    if (sub === "0") {
+      toast.info("Checkout cancelled.");
+      window.history.replaceState({}, "", "/dashboard");
+    }
+  }, [user]);
+
   if (loading || !user || !profile) {
     return (
       <div className="grid min-h-screen place-items-center bg-background">
