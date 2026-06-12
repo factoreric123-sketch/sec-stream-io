@@ -58,14 +58,14 @@ These go in your deployment environment (Lovable). They must NOT be committed to
 | `STRIPE_SECRET_KEY` | `sk_live_...` | Stripe → Developers → API keys |
 | `STRIPE_PRICE_ID` | `price_...` | From Step 3 |
 | `STRIPE_WEBHOOK_SECRET` | `whsec_...` | From Step 5 |
-| `APP_BASE_URL` | `https://sec-stream-io.lovable.app` | Your deployed URL |
+| `APP_BASE_URL` | `https://sec-filing-api.com` | Your deployed URL |
 
 ---
 
 ## Step 5 — Register the webhook in Stripe
 
 1. Stripe dashboard → **Developers → Webhooks → Add endpoint**
-2. **Endpoint URL:** `https://sec-stream-io.lovable.app/api/public/stripe-webhook`
+2. **Endpoint URL:** `https://sec-filing-api.com/api/public/stripe-webhook`
 3. **Events to send:**
    - `checkout.session.completed`
    - `customer.subscription.updated`
@@ -284,7 +284,7 @@ their counter incremented (for analytics) but skip the gate.
          "used": 11,
          "quota": 10,
          "plan": "free",
-         "upgrade_url": "https://sec-stream-io.lovable.app/dashboard?upgrade=1"
+         "upgrade_url": "https://sec-filing-api.com/dashboard?upgrade=1"
        }
      }
    }

@@ -9,8 +9,10 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as StatusRouteImport } from './routes/status'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PlaygroundRouteImport } from './routes/playground'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ExamplesRouteImport } from './routes/examples'
@@ -37,6 +39,11 @@ import { Route as ApiPublicV1FilingsBatchRouteImport } from './routes/api/public
 import { Route as ApiPublicV1BillingPortalRouteImport } from './routes/api/public/v1/billing/portal'
 import { Route as ApiPublicV1InternalDispatchWebhooksRouteImport } from './routes/api/public/v1/_internal/dispatch-webhooks'
 
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StatusRoute = StatusRouteImport.update({
   id: '/status',
   path: '/status',
@@ -45,6 +52,11 @@ const StatusRoute = StatusRouteImport.update({
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PlaygroundRoute = PlaygroundRouteImport.update({
@@ -184,8 +196,10 @@ export interface FileRoutesByFullPath {
   '/examples': typeof ExamplesRouteWithChildren
   '/login': typeof LoginRoute
   '/playground': typeof PlaygroundRoute
+  '/privacy': typeof PrivacyRoute
   '/signup': typeof SignupRoute
   '/status': typeof StatusRoute
+  '/terms': typeof TermsRoute
   '/companies/$ticker': typeof CompaniesTickerRoute
   '/docs/schema': typeof DocsSchemaRoute
   '/docs/sdk': typeof DocsSdkRoute
@@ -213,8 +227,10 @@ export interface FileRoutesByTo {
   '/examples': typeof ExamplesRouteWithChildren
   '/login': typeof LoginRoute
   '/playground': typeof PlaygroundRoute
+  '/privacy': typeof PrivacyRoute
   '/signup': typeof SignupRoute
   '/status': typeof StatusRoute
+  '/terms': typeof TermsRoute
   '/companies/$ticker': typeof CompaniesTickerRoute
   '/docs/schema': typeof DocsSchemaRoute
   '/docs/sdk': typeof DocsSdkRoute
@@ -243,8 +259,10 @@ export interface FileRoutesById {
   '/examples': typeof ExamplesRouteWithChildren
   '/login': typeof LoginRoute
   '/playground': typeof PlaygroundRoute
+  '/privacy': typeof PrivacyRoute
   '/signup': typeof SignupRoute
   '/status': typeof StatusRoute
+  '/terms': typeof TermsRoute
   '/companies/$ticker': typeof CompaniesTickerRoute
   '/docs/schema': typeof DocsSchemaRoute
   '/docs/sdk': typeof DocsSdkRoute
@@ -274,8 +292,10 @@ export interface FileRouteTypes {
     | '/examples'
     | '/login'
     | '/playground'
+    | '/privacy'
     | '/signup'
     | '/status'
+    | '/terms'
     | '/companies/$ticker'
     | '/docs/schema'
     | '/docs/sdk'
@@ -303,8 +323,10 @@ export interface FileRouteTypes {
     | '/examples'
     | '/login'
     | '/playground'
+    | '/privacy'
     | '/signup'
     | '/status'
+    | '/terms'
     | '/companies/$ticker'
     | '/docs/schema'
     | '/docs/sdk'
@@ -332,8 +354,10 @@ export interface FileRouteTypes {
     | '/examples'
     | '/login'
     | '/playground'
+    | '/privacy'
     | '/signup'
     | '/status'
+    | '/terms'
     | '/companies/$ticker'
     | '/docs/schema'
     | '/docs/sdk'
@@ -362,8 +386,10 @@ export interface RootRouteChildren {
   ExamplesRoute: typeof ExamplesRouteWithChildren
   LoginRoute: typeof LoginRoute
   PlaygroundRoute: typeof PlaygroundRoute
+  PrivacyRoute: typeof PrivacyRoute
   SignupRoute: typeof SignupRoute
   StatusRoute: typeof StatusRoute
+  TermsRoute: typeof TermsRoute
   CompaniesTickerRoute: typeof CompaniesTickerRoute
   VsCompetitorRoute: typeof VsCompetitorRoute
   ApiPublicStripeCheckoutRoute: typeof ApiPublicStripeCheckoutRoute
@@ -381,6 +407,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/status': {
       id: '/status'
       path: '/status'
@@ -393,6 +426,13 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/playground': {
@@ -617,8 +657,10 @@ const rootRouteChildren: RootRouteChildren = {
   ExamplesRoute: ExamplesRouteWithChildren,
   LoginRoute: LoginRoute,
   PlaygroundRoute: PlaygroundRoute,
+  PrivacyRoute: PrivacyRoute,
   SignupRoute: SignupRoute,
   StatusRoute: StatusRoute,
+  TermsRoute: TermsRoute,
   CompaniesTickerRoute: CompaniesTickerRoute,
   VsCompetitorRoute: VsCompetitorRoute,
   ApiPublicStripeCheckoutRoute: ApiPublicStripeCheckoutRoute,
@@ -637,12 +679,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}

@@ -62,10 +62,16 @@ export const Route = createFileRoute("/api/public/v1/billing/portal")({
             );
           }
 
-          // 3. Create portal session.
+          // 3. Create portal session. Use request origin so we return the
+          //    user to the same domain they came from.
+          const origin =
+            request.headers.get("origin") ||
+            (request.headers.get("host")
+              ? `https://${request.headers.get("host")}`
+              : APP_BASE_URL);
           const session = await stripe.billingPortal.sessions.create({
             customer: profile.stripe_customer_id,
-            return_url: `${APP_BASE_URL}/dashboard`,
+            return_url: `${origin}/dashboard`,
           });
 
           return json({ url: session.url });

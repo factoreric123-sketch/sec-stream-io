@@ -298,6 +298,8 @@ function LandingPage() {
             <Link to="/changelog" className="hover:text-foreground">Changelog</Link>
             <Link to="/status" className="hover:text-foreground">Status</Link>
             <Link to="/login" className="hover:text-foreground">Log in</Link>
+            <Link to="/terms" className="hover:text-foreground">Terms</Link>
+            <Link to="/privacy" className="hover:text-foreground">Privacy</Link>
             <span>© {new Date().getFullYear()}</span>
           </div>
         </div>
