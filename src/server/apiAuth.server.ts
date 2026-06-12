@@ -261,11 +261,18 @@ export async function handlePublicApi<T>(
 
   // 2. Plan enforcement
   if (!isPlanActive(auth.plan, auth.renewal_date)) {
-    const body = buildErrorBody(
-      "plan_inactive",
-      "Your subscription is not active. Renew billing to continue using the API.",
-      { plan: auth.plan, renewal_date: auth.renewal_date }
-    );
+    const message =
+      auth.plan === "free"
+        ? "No active subscription on this account. Subscribe at https://sec-filing-api.com/dashboard to get API access ($10/month)."
+        : auth.plan === "canceled"
+          ? "Your subscription was canceled. Reactivate at https://sec-filing-api.com/dashboard to continue using the API."
+          : auth.plan === "past_due"
+            ? "Payment failed on your subscription. Update your card at https://sec-filing-api.com/dashboard to restore access."
+            : "Your subscription is not active. Manage billing at https://sec-filing-api.com/dashboard to continue.";
+    const body = buildErrorBody("plan_inactive", message, {
+      plan: auth.plan,
+      renewal_date: auth.renewal_date,
+    });
     const latency = Date.now() - start;
     await logUsage(auth, endpoint, 403, latency);
     return jsonResponse(body, 403, {
