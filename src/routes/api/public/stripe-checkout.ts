@@ -58,15 +58,23 @@ export const Route = createFileRoute("/api/public/stripe-checkout")({
             return json({ error: "Server not configured" }, 500);
           }
 
-          // 2. Create Checkout session. Stripe handles the rest.
+          // 2. Derive base URL from the request so preview, lovable.app, and
+          //    custom domain all redirect back to the same origin the user is on.
+          const origin =
+            request.headers.get("origin") ||
+            (request.headers.get("host")
+              ? `https://${request.headers.get("host")}`
+              : APP_BASE_URL);
+
+          // 3. Create Checkout session. Stripe handles the rest.
           const session = await stripe.checkout.sessions.create({
             mode: "subscription",
             payment_method_types: ["card"],
             line_items: [{ price: STRIPE_PRICE_ID, quantity: 1 }],
             customer_email: user.email ?? undefined,
             client_reference_id: user.id,
-            success_url: `${APP_BASE_URL}/dashboard?subscribed=1`,
-            cancel_url:  `${APP_BASE_URL}/dashboard?subscribed=0`,
+            success_url: `${origin}/dashboard?subscribed=1`,
+            cancel_url:  `${origin}/dashboard?subscribed=0`,
             allow_promotion_codes: true,
             subscription_data: {
               metadata: { user_id: user.id },

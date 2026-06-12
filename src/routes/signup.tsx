@@ -46,6 +46,12 @@ function SignupPage() {
         <p className="text-center text-xs text-muted-foreground">
           $10/month after free trial · cancel anytime
         </p>
+        <p className="text-center text-xs text-muted-foreground">
+          By creating an account you agree to our{" "}
+          <Link to="/terms" className="underline hover:text-foreground">Terms</Link>{" "}
+          and{" "}
+          <Link to="/privacy" className="underline hover:text-foreground">Privacy Policy</Link>.
+        </p>
         <p className="text-center text-sm text-muted-foreground">
           Already have an account?{" "}
           <Link to="/login" className="text-primary hover:underline">Log in</Link>
